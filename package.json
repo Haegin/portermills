@@ -1,0 +1,23 @@
+{
+  "name": "portermills",
+  "version": "1.0.0",
+  "description": "Our wedding website",
+  "main": "index.js",
+  "repository": "https://github.com/Haegin/portermills",
+  "author": "Harry Mills <harry@portermills.net>",
+  "license": "Unlicensed",
+  "private": true,
+  "dependencies": {
+    "next": "^9.2.0",
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0"
+  },
+  "scripts": {
+    "dev": "next",
+    "build": "next build",
+    "start": "next start"
+  },
+  "devDependencies": {
+    "prettier": "^1.19.1"
+  }
+}
