@@ -9,8 +9,12 @@
   "private": true,
   "dependencies": {
     "next": "^9.2.0",
+    "polished": "^3.4.2",
     "react": "^16.12.0",
-    "react-dom": "^16.12.0"
+    "react-dom": "^16.12.0",
+    "react-is": "^16.12.0",
+    "sscaffold-css": "^0.1.0",
+    "styled-components": "^5.0.0"
   },
   "scripts": {
     "dev": "next",
@@ -20,6 +24,8 @@
   "devDependencies": {
     "@types/node": "^13.1.7",
     "@types/react": "^16.9.17",
+    "@types/react-is": "16.7.1",
+    "@types/styled-components": "^4.4.2",
     "babel-plugin-root-import": "^6.4.1",
     "prettier": "^1.19.1",
     "typescript": "^3.7.4"

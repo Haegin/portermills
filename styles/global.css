@@ -1,8 +1,15 @@
 @import url('https://fonts.googleapis.com/css?family=Montserrat:300|Sanchez&display=swap');
 
+html, body {
+  overflow-x: hidden;
+}
+
 body {
   font-family: 'Montserrat', serif;
+  font-size: 16px;
   line-height: 1.5rem;
+  color: #434F5C;
+  background-color: #f1eeeb;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -10,7 +17,21 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 h1 {
-  font-size: 3rem;
-  line-height: 4rem;
+  font-size: 3.6rem;
+  line-height: 4.3rem;
   margin: 1rem 0 0.5rem 0;
+}
+
+h2 {
+  font-size: 1.75rem;
+  line-height: 2.5rem;
+}
+
+h3 {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+button {
+  width: fit-content;
 }
