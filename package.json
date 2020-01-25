@@ -27,6 +27,7 @@
     "@types/react-is": "16.7.1",
     "@types/styled-components": "^4.4.2",
     "babel-plugin-root-import": "^6.4.1",
+    "eslint": "^6.8.0",
     "prettier": "^1.19.1",
     "typescript": "^3.7.4"
   }

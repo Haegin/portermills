@@ -32,7 +32,7 @@ const Container = styled.div<Pick<Props, 'imagePos'>>`
     object-fit: cover;
   }
 
-  h2 {
+  h4 {
     text-transform: uppercase;
     margin-bottom: 2rem;
   }
@@ -71,7 +71,7 @@ const imageBlock = ({
     <Container className={className} imagePos={imagePos}>
       <img src={image} />
       <div>
-        <h2>{title}</h2>
+        <h4>{title}</h4>
         {children}
         <Link href={link}>
           <button>{button}</button>

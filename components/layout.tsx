@@ -12,12 +12,27 @@ const Bar = styled.div`
   background-color: ${p => p.theme.colors.orange};
   color: ${p => p.theme.colors.beige};
 
+  h3 {
+    padding: 0;
+    margin: 0;
+    margin-bottom: 4rem;
+  }
+
   & section {
     margin: 0 100rem;
-    padding: 4rem 0;
+    padding: 6rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  & > section > div {
+    display: flex;
+    flex-direction: row;
   }
 
   & button {
+    margin-top: 4rem;
+    margin-bottom: 0;
     border-color: ${p => p.theme.colors.beige};
     color: ${p => p.theme.colors.beige};
   }

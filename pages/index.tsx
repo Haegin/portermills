@@ -2,9 +2,11 @@ import styled from 'styled-components'
 import Link from 'next/link'
 
 import Header from '../components/header'
+import Footer from '../components/footer'
 import ImageBlock from '../components/imageBlock'
 import ThreeUp from '../components/threeUp'
 import { Content, Bar } from '../components/layout'
+import IconStack from '../components/iconStack'
 
 const Intro = styled.div`
   display: flex;
@@ -14,13 +16,14 @@ const Intro = styled.div`
   margin-top: 5rem;
   margin-bottom: calc(6.25rem + 8rem);
 
-  & h1 {
+  & h2 {
     width: 40%;
   }
 
-  & h3 {
+  & h5 {
     width: 50%;
     align-self: flex-end;
+    text-shadow: 0 0 0.5rem ${p => p.theme.colors.beige};
   }
 
   & p {
@@ -45,12 +48,12 @@ const Index = () => (
     <Header />
     <Content>
       <Intro>
-        <h1>Welcome to Porter-Mills Camp</h1>
+        <h2>Welcome to Porter-Mills Camp</h2>
         <img src="/images/going-to-waupoos.jpg" />
-        <h3>
+        <h5>
           Get ready for a weekend of family, friends, fun and (hopefully) some
           glorious October sun in beautiful Prince Edward County, Ontario.
-        </h3>
+        </h5>
         <p>
           Join us at the Camp at Waupoos Island on Thanksgiving Weekend 2020 for
           good food, great beer and - oh yeah! - a wedding!
@@ -120,7 +123,29 @@ const Index = () => (
       </ImageBlock>
       <Bar>
         <section>
-          <h2>The Weekend</h2>
+          <h3>The Weekend</h3>
+          <div>
+            <IconStack title="The Day Before" icon="09-10-2020">
+              <p>
+                Guests are welcome to arrive Friday afternoon or in the evening.
+              </p>
+            </IconStack>
+            <IconStack title="The Big Day" icon="10-10-2020">
+              <p>
+                Guests are welcome to arrive Friday afternoon or in the evening.
+              </p>
+            </IconStack>
+            <IconStack title="Thanksgiving" icon="11-10-2020">
+              <p>
+                Guests are welcome to arrive Friday afternoon or in the evening.
+              </p>
+            </IconStack>
+            <IconStack title="The Day After" icon="12-10-2020">
+              <p>
+                Guests are welcome to arrive Friday afternoon or in the evening.
+              </p>
+            </IconStack>
+          </div>
           <Link href="/the-weekend">
             <button>RSVP</button>
           </Link>
@@ -139,6 +164,7 @@ const Index = () => (
         </p>
       </ImageBlock>
     </Content>
+    <Footer />
   </div>
 )
 

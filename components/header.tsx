@@ -10,8 +10,9 @@ const Container = styled.div`
   background-position: center bottom;
   background-image: linear-gradient(
       to bottom,
-      ${p => p.theme.colors.blue},
-      rgba(0, 0, 0, 0) 45%,
+      ${p => p.theme.colors.primaryText},
+      ${p => transparentize(0.2, p.theme.colors.primaryText)} 20%,
+      rgba(0, 0, 0, 0) 60%,
       rgba(0, 0, 0, 0)
     ),
     url(/images/on-the-lake.jpg);
@@ -26,12 +27,17 @@ const SecondaryNav = styled.div`
   margin-top: 3rem;
   width: 1400px;
   margin: 0 auto;
+  margin-top: 2rem;
 
   & a {
     color: ${p => p.theme.colors.beige};
     text-decoration: none;
-    font-size: 0.875rem;
     margin-left: 2rem;
+  }
+
+  & a:hover {
+    font-weight: 900;
+    text-shadow: 0 0 1rem ${p => p.theme.colors.beige};
   }
 `
 
@@ -42,11 +48,12 @@ const PrimaryNav = styled.div`
   align-items: center;
   width: 1200px;
   margin: 0 auto;
+  margin-top: 2rem;
 
   & a {
     text-transform: uppercase;
     text-decoration: none;
-    font-size: 1.5;
+    font-size: 1.5rem;
     font-weight: 600;
     color: ${p => p.theme.colors.beige};
   }
