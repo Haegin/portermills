@@ -70,7 +70,6 @@ OurStory.getInitialProps = async () => {
     Prismic.Predicates.at('document.type', 'year'),
     {}
   )
-  console.log(resp.results[0])
   return {
     years: resp.results.map(result => result),
   }
