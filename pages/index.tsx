@@ -13,7 +13,6 @@ const Intro = styled.div`
   flex-direction: column;
   width: 100%;
   position: relative;
-  margin-top: 5rem;
   margin-bottom: calc(6.25rem + 8rem);
 
   & h2 {

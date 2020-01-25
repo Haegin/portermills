@@ -6,6 +6,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+  align-items: center;
   height: 650px;
   background-position: center bottom;
   background-image: linear-gradient(
@@ -18,6 +19,11 @@ const Container = styled.div`
     url(/images/on-the-lake.jpg);
   background-position: center, center;
   background-size: cover, cover;
+
+  h1 {
+    color: ${p => p.theme.colors.beige};
+    text-shadow: 0 0 1rem ${p => p.theme.colors.primaryText};
+  }
 `
 
 const SecondaryNav = styled.div`
@@ -69,7 +75,11 @@ const PrimaryNav = styled.div`
   }
 `
 
-const Header = () => (
+interface Props {
+  title?: string
+}
+
+const Header = ({ title }: Props) => (
   <Container>
     <SecondaryNav>
       <Link href="/registry">
@@ -103,6 +113,7 @@ const Header = () => (
         <a>Itinerary</a>
       </Link>
     </PrimaryNav>
+    {title && <h1>{title}</h1>}
   </Container>
 )
 

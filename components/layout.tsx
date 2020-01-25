@@ -2,7 +2,7 @@ import styled from 'styled-components'
 
 const Content = styled.div`
   width: 960px;
-  margin: auto;
+  margin: 8rem auto;
 `
 
 const Bar = styled.div`

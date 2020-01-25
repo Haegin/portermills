@@ -49,21 +49,21 @@ const Container = styled.div<Pick<Props, 'imagePos'>>`
 `
 
 interface Props {
-  imagePos: 'left' | 'right' | 'top'
   title: string
-  children: ReactNode
-  button: string
   link: string
   image: string
+  children?: ReactNode
+  imagePos?: 'left' | 'right' | 'top'
+  button?: string
   className?: string
 }
 
 const imageBlock = ({
-  imagePos,
+  imagePos = "top",
   image,
   title,
   children,
-  button,
+  button = "Learn More",
   link,
   className,
 }: Props) => {
