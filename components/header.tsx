@@ -103,14 +103,14 @@ const Header = ({ title }: Props) => (
         <a>Itinerary</a>
       </Link>
       <img src="/images/portermills-camp.jpg" alt="Portermills Camp" />
-      <Link href="/our-story">
-        <a>Our Story</a>
+      <Link href="/camp-life">
+        <a>Camp Life</a>
       </Link>
-      <Link href="/what-to-expect">
-        <a>What to Expect</a>
+      <Link href="/travel">
+        <a>Travel</a>
       </Link>
-      <Link href="/itinerary">
-        <a>Itinerary</a>
+      <Link href="/staying-on">
+        <a>Staying On</a>
       </Link>
     </PrimaryNav>
     {title && <h1>{title}</h1>}
