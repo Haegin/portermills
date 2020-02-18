@@ -1,9 +1,10 @@
-import React, { ReactNode } from 'react'
+import React, { useState, ReactNode } from 'react'
 import styled from 'styled-components'
+import Lightbox from 'react-image-lightbox'
 
 const YearContainer = styled.section`
   display: flex;
-  img {
+  img.main {
     flex: 1 1 0;
     width: calc(50% - 4.125rem);
     max-height: 300px;
@@ -28,15 +29,43 @@ interface YearProps {
   image: string
   children: ReactNode
   className?: string
+  gallery: Array<any>
 }
 
-export const Year = ({ children, image, className }: YearProps) => (
-  <YearContainer className={className}>
-    <img src={image} />
-    <div />
-    <aside>{children}</aside>
-  </YearContainer>
-)
+export const Year = ({ children, image, className, gallery }: YearProps) => {
+  const [modalOpen, setModalOpen] = useState(false)
+  const [photoIndex, setPhotoIndex] = useState(0)
+  return (
+    <YearContainer className={className}>
+      <img
+        className="main"
+        src={image}
+        onClick={() => {
+          setModalOpen(true)
+        }}
+      />
+      <div />
+      <aside>{children}</aside>
+      {gallery.length && modalOpen && (
+        <Lightbox
+          mainSrc={gallery[photoIndex].gallery_image.url}
+          nextSrc={gallery[(photoIndex + 1) % gallery.length].gallery_image.url}
+          prevSrc={
+            gallery[(photoIndex + gallery.length - 1) % gallery.length]
+              .gallery_image.url
+          }
+          onCloseRequest={() => setModalOpen(false)}
+          onMovePrevRequest={() =>
+            setPhotoIndex((photoIndex + gallery.length - 1) % gallery.length)
+          }
+          onMoveNextRequest={() =>
+            setPhotoIndex((photoIndex + 1) % gallery.length)
+          }
+        />
+      )}
+    </YearContainer>
+  )
+}
 
 const Timeline = styled.article`
   display: flex;

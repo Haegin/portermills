@@ -1,6 +1,7 @@
 import 'sscaffold-css'
 // import '~/styles/reset.css'
 import '~/styles/global.css'
+import 'react-image-lightbox/style.css'
 
 import { ThemeProvider } from 'styled-components'
 

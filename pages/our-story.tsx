@@ -1,7 +1,7 @@
 import styled from 'styled-components'
 import Link from 'next/link'
 import Prismic from 'prismic-javascript'
-import { RichText } from 'prismic-reactjs'
+import { RichText, RichTextContent } from 'prismic-reactjs'
 
 import Header from '../components/header'
 import Footer from '../components/footer'
@@ -13,17 +13,29 @@ import IconStack from '../components/iconStack'
 
 import PrismicClient from '../prismic-client'
 
+interface Image {
+  dimensions: { width: number; height: number }
+  alt: string | null
+  url: string
+}
+
+interface MainImage extends Image {
+  thumb: Image
+}
+
+interface GalleryEntry {
+  gallery_image: Image
+}
+
 interface Year {
   id: string
   data: {
     year: {
       text: string
     }
-    main_image: {
-      url: string
-    }
-    content: string
-    description: string
+    description: RichTextContent
+    main_image: MainImage
+    gallery: Array<GalleryEntry>
   }
 }
 
@@ -37,7 +49,14 @@ const OurStory = ({ years }: Props) => (
     <Content>
       <Timeline>
         {years.map(({ id, data }) => (
-          <Year key={id} image={data.main_image.url}>
+          <Year
+            key={id}
+            image={
+              data.main_image.thumb
+                ? data.main_image.thumb.url
+                : data.main_image.url
+            }
+            gallery={data.gallery}>
             <RichText render={data.year} />
             <RichText render={data.description} />
           </Year>
