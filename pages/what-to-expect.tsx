@@ -1,6 +1,7 @@
 import styled from 'styled-components'
 import { transparentize } from 'polished'
 import Link from 'next/link'
+import Head from 'next/head'
 
 import Header from '../components/header'
 import Footer from '../components/footer'
@@ -67,6 +68,10 @@ const TwoColumns = styled.div`
 
 const WhatToExpect = () => (
   <div>
+    <Head>
+      <title>Porter-Mills: What To Expect</title>
+      <meta name="viewport" content="initial-scale=1.0, width=device-width" />
+    </Head>
     <Header />
     <Content>
       <Intro>

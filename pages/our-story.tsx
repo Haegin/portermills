@@ -1,5 +1,6 @@
 import styled from 'styled-components'
 import Link from 'next/link'
+import Head from 'next/head'
 import Prismic from 'prismic-javascript'
 import { RichText, RichTextContent } from 'prismic-reactjs'
 
@@ -45,6 +46,10 @@ interface Props {
 
 const OurStory = ({ years }: Props) => (
   <div>
+    <Head>
+      <title>Porter-Mills: Story</title>
+      <meta name="viewport" content="initial-scale=1.0, width=device-width" />
+    </Head>
     <Header title="Our Story" />
     <Content>
       <Timeline>
