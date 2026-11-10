@@ -46,7 +46,7 @@ fun LoginScreen(viewModel: AuthViewModel) {
             verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text("Portermills", style = MaterialTheme.typography.displaySmall)
+            Text("Porter-Mills", style = MaterialTheme.typography.displaySmall)
 
             val sentTo = state.sentTo
             if (sentTo != null) {

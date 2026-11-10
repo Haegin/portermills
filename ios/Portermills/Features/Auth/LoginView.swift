@@ -8,7 +8,7 @@ struct LoginView: View {
         VStack(spacing: 24) {
             Spacer()
 
-            Text("Portermills")
+            Text("Porter-Mills")
                 .font(.largeTitle.bold())
 
             if let sentTo = viewModel.sentTo {

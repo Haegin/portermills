@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Portermills.AddUser do
   There is no sign-up; family members are added from the command line.
 
       mix portermills.add_user "Sam" sam@example.com
-      mix portermills.add_user "Alex" alex@example.com --admin --family "Porter Mills"
+      mix portermills.add_user "Alex" alex@example.com --admin --family "Porter-Mills"
 
   The user joins the family named by `--family`, or the only family if there
   is exactly one. A family that doesn't exist yet is created.

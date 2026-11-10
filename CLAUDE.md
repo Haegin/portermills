@@ -1,4 +1,4 @@
-# Portermills Family App
+# Porter-Mills Family App
 
 A private family app with a shared calendar, lists (shopping + packing), and wishlists.
 Built as a playground — features may be unrelated to one another.

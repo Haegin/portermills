@@ -24,7 +24,7 @@ if config_env() == :prod do
 
   config :portermills, Portermills.Guardian, secret_key: fetch!.("GUARDIAN_SECRET")
 
-  config :portermills, mail_from: {"Portermills", fetch!.("MAIL_FROM")}
+  config :portermills, mail_from: {"Porter-Mills", fetch!.("MAIL_FROM")}
 
   config :portermills, Portermills.Mailer,
     relay: System.get_env("SMTP_HOST") || "smtp.fastmail.com",

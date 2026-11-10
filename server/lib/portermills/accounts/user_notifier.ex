@@ -7,11 +7,11 @@ defmodule Portermills.Accounts.UserNotifier do
       new()
       |> to({user.name, user.email})
       |> from(Application.fetch_env!(:portermills, :mail_from))
-      |> subject("Your Portermills sign-in link")
+      |> subject("Your Porter-Mills sign-in link")
       |> text_body("""
       Hi #{user.name},
 
-      Open this link on your phone to sign in to Portermills:
+      Open this link on your phone to sign in to Porter-Mills:
 
       #{url}
 

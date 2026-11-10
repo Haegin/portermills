@@ -26,7 +26,7 @@ extension Error {
     }
 }
 
-/// HTTP client for the Portermills API. Field names are snake_case on the
+/// HTTP client for the Porter-Mills API. Field names are snake_case on the
 /// wire and camelCase in Swift.
 @MainActor
 final class APIClient {

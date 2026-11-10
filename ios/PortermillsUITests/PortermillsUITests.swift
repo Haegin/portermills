@@ -35,7 +35,7 @@ final class PortermillsUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Check your email"].waitForExistence(timeout: 10))
 
         // Open the link the way tapping it elsewhere would, and confirm the
-        // system's "Open in Portermills?" prompt.
+        // system's "Open in Porter-Mills?" prompt.
         XCUIDevice.shared.system.open(URL(string: "portermills://auth?token=\(token)")!)
         let open = springboard.buttons["Open"]
         if open.waitForExistence(timeout: 5) { open.tap() }

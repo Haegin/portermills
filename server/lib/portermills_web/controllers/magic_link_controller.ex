@@ -17,7 +17,7 @@ defmodule PortermillsWeb.MagicLinkController do
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1">
-          <title>Sign in to Portermills</title>
+          <title>Sign in to Porter-Mills</title>
           <style>
             body { font-family: system-ui, sans-serif; max-width: 28rem; margin: 4rem auto; padding: 0 1.5rem; text-align: center; color: #1c1b1f; }
             a.button { display: inline-block; margin-top: 1rem; padding: .9rem 1.6rem; border-radius: 999px; background: #2f6f5e; color: #fff; text-decoration: none; font-weight: 600; }
@@ -25,7 +25,7 @@ defmodule PortermillsWeb.MagicLinkController do
           </style>
         </head>
         <body>
-          <h1>Portermills</h1>
+          <h1>Porter-Mills</h1>
           <p>Open this page on the phone that has the app installed.</p>
           <a class="button" href="#{app_link}">Sign in to the app</a>
         </body>

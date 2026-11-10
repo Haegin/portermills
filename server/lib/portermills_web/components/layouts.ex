@@ -12,7 +12,7 @@ defmodule PortermillsWeb.Layouts do
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="csrf-token" content={Plug.CSRFProtection.get_csrf_token()} />
         <meta name="robots" content="noindex" />
-        <title>Portermills</title>
+        <title>Porter-Mills</title>
         <style>
           body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 1.25rem; color: #1c1b1f; }
           h1 { font-size: 1.6rem; }

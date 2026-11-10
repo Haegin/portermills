@@ -3,7 +3,7 @@ import Config
 config :portermills,
   ecto_repos: [Portermills.Repo],
   generators: [timestamp_type: :utc_datetime],
-  mail_from: {"Portermills", "noreply@localhost"},
+  mail_from: {"Porter-Mills", "noreply@localhost"},
   log_magic_links: false
 
 config :portermills, PortermillsWeb.Endpoint,

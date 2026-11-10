@@ -6,9 +6,9 @@ alias Portermills.Accounts.Family
 
 if Mix.env() == :dev do
   family =
-    case Repo.get_by(Family, name: "Porter Mills") do
+    case Repo.get_by(Family, name: "Porter-Mills") do
       nil ->
-        {:ok, family} = Accounts.create_family(%{name: "Porter Mills"})
+        {:ok, family} = Accounts.create_family(%{name: "Porter-Mills"})
         family
 
       family ->
