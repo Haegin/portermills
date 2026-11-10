@@ -3,6 +3,8 @@
 # deps and _build live outside src so each deploy only recompiles what changed.
 set -euo pipefail
 export PATH="$HOME/.local/bin:$PATH" LANG=C.UTF-8
+# Java in .tool-versions is for the Android build only.
+export MISE_DISABLE_TOOLS=java
 export MIX_ENV=prod MIX_DEPS_PATH="$HOME/deps" MIX_BUILD_ROOT="$HOME/build"
 
 cd "$HOME/src"
