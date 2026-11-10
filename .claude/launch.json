@@ -5,7 +5,8 @@
       "name": "server",
       "runtimeExecutable": "/bin/zsh",
       "runtimeArgs": ["-lc", "cd server && exec mix phx.server"],
-      "port": 4000
+      "port": 2310,
+      "autoPort": false
     }
   ]
 }

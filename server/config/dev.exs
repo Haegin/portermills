@@ -14,7 +14,7 @@ config :portermills, Portermills.Repo,
 # Bound to all interfaces so the Android emulator (10.0.2.2) and phones on the
 # LAN can reach the dev server.
 config :portermills, PortermillsWeb.Endpoint,
-  http: [ip: {0, 0, 0, 0}, port: String.to_integer(System.get_env("PORT") || "4000")],
+  http: [ip: {0, 0, 0, 0}, port: String.to_integer(System.get_env("PORT") || "2310")],
   check_origin: false,
   code_reloader: true,
   debug_errors: true,

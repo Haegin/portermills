@@ -186,19 +186,19 @@ No code is shared with the `lists` context.
 cd server
 mix deps.get
 mix ecto.setup   # creates DB, runs migrations, seeds
-mix phx.server   # starts on localhost:4000
+mix phx.server   # starts on localhost:2310
 ```
 
 ### iOS
 Open `ios/Portermills.xcodeproj` in Xcode, select a simulator, and press Run.
-The app points to `http://localhost:4000` in debug builds.
+The app points to `http://localhost:2310` in debug builds.
 
 ### Android
 ```bash
 cd android
 ./gradlew installDebug   # installs on connected device/emulator
 ```
-The app points to `http://10.0.2.2:4000` (localhost from the Android emulator).
+The app points to `http://10.0.2.2:2310` (localhost from the Android emulator).
 
 ### Environment
 Copy `server/.env.example` → `server/.env` and fill in `DATABASE_URL`, `SECRET_KEY_BASE`,

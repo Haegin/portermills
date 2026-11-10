@@ -19,7 +19,7 @@ if config_env() == :prod do
   # public URL is https on 443 while the app itself listens on plain HTTP.
   config :portermills, PortermillsWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],
-    http: [ip: {0, 0, 0, 0, 0, 0, 0, 0}, port: String.to_integer(System.get_env("PORT") || "4000")],
+    http: [ip: {0, 0, 0, 0, 0, 0, 0, 0}, port: String.to_integer(System.get_env("PORT") || "2310")],
     secret_key_base: fetch!.("SECRET_KEY_BASE")
 
   config :portermills, Portermills.Guardian, secret_key: fetch!.("GUARDIAN_SECRET")
