@@ -1,78 +1,103 @@
 import Foundation
 import Security
 
-@MainActor
-final class AuthStore: ObservableObject {
-    @Published private(set) var token: String?
-    @Published private(set) var currentUser: AuthUser?
-
-    var isAuthenticated: Bool { token != nil }
-
-    init() {
-        token = Keychain.read(key: "auth_token")
-        if let data = Keychain.readData(key: "auth_user") {
-            currentUser = try? JSONDecoder.api.decode(AuthUser.self, from: data)
-        }
-    }
-
-    func setAuth(token: String, user: AuthUser) {
-        self.token = token
-        self.currentUser = user
-        Keychain.write(key: "auth_token", value: token)
-        if let data = try? JSONEncoder.api.encode(user) {
-            Keychain.writeData(key: "auth_user", data: data)
-        }
-        PhoenixSocket.shared.connect(token: token)
-    }
-
-    func signOut() {
-        token = nil
-        currentUser = nil
-        Keychain.delete(key: "auth_token")
-        Keychain.delete(key: "auth_user")
-    }
-}
-
-struct AuthUser: Codable {
+struct AuthUser: Codable, Equatable {
     let id: String
     let name: String
     let email: String
     let familyId: String
 }
 
-private enum Keychain {
-    static func read(key: String) -> String? {
-        guard let data = readData(key: key) else { return nil }
-        return String(data: data, encoding: .utf8)
+/// The signed-in user and their API token, kept in the Keychain.
+@MainActor
+final class AuthStore: ObservableObject {
+    @Published private(set) var token: String?
+    @Published private(set) var user: AuthUser?
+
+    var isAuthenticated: Bool { token != nil && user != nil }
+
+    init() {
+        #if DEBUG
+        // UI tests start from a signed-out app.
+        if ProcessInfo.processInfo.arguments.contains("--reset-session") {
+            Keychain.delete(key: Self.tokenKey)
+            Keychain.delete(key: Self.userKey)
+        }
+        #endif
+
+        token = Keychain.read(key: Self.tokenKey).flatMap { String(data: $0, encoding: .utf8) }
+        user = Keychain.read(key: Self.userKey).flatMap { try? JSONDecoder.api.decode(AuthUser.self, from: $0) }
+        if token == nil || user == nil {
+            token = nil
+            user = nil
+        }
+
+        APIClient.shared.authStore = self
+        startSocket()
     }
 
-    static func readData(key: String) -> Data? {
+    func signIn(token: String, user: AuthUser) {
+        self.token = token
+        self.user = user
+        Keychain.write(key: Self.tokenKey, data: Data(token.utf8))
+        if let data = try? JSONEncoder.api.encode(user) {
+            Keychain.write(key: Self.userKey, data: data)
+        }
+        startSocket()
+    }
+
+    func signOut() {
+        token = nil
+        user = nil
+        Keychain.delete(key: Self.tokenKey)
+        Keychain.delete(key: Self.userKey)
+        PhoenixSocket.shared.stop()
+    }
+
+    private func startSocket() {
+        if let token, let user {
+            PhoenixSocket.shared.start(token: token, familyId: user.familyId)
+        }
+    }
+
+    private static let tokenKey = "auth_token"
+    private static let userKey = "auth_user"
+}
+
+private enum Keychain {
+    private static let service = "app.portermills"
+
+    static func read(key: String) -> Data? {
         let query: [CFString: Any] = [
             kSecClass: kSecClassGenericPassword,
+            kSecAttrService: service,
             kSecAttrAccount: key,
             kSecReturnData: true,
+            kSecMatchLimit: kSecMatchLimitOne,
         ]
         var result: AnyObject?
-        SecItemCopyMatching(query as CFDictionary, &result)
+        guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess else { return nil }
         return result as? Data
     }
 
-    static func write(key: String, value: String) {
-        writeData(key: key, data: Data(value.utf8))
-    }
-
-    static func writeData(key: String, data: Data) {
+    static func write(key: String, data: Data) {
         delete(key: key)
-        let attrs: [CFString: Any] = [
+        let attributes: [CFString: Any] = [
             kSecClass: kSecClassGenericPassword,
+            kSecAttrService: service,
             kSecAttrAccount: key,
+            kSecAttrAccessible: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
             kSecValueData: data,
         ]
-        SecItemAdd(attrs as CFDictionary, nil)
+        SecItemAdd(attributes as CFDictionary, nil)
     }
 
     static func delete(key: String) {
-        let query: [CFString: Any] = [kSecClass: kSecClassGenericPassword, kSecAttrAccount: key]
+        let query: [CFString: Any] = [
+            kSecClass: kSecClassGenericPassword,
+            kSecAttrService: service,
+            kSecAttrAccount: key,
+        ]
         SecItemDelete(query as CFDictionary)
     }
 }

@@ -3,6 +3,7 @@ import SwiftUI
 @main
 struct PortermillsApp: App {
     @StateObject private var authStore = AuthStore()
+    @StateObject private var login = LoginViewModel()
 
     var body: some Scene {
         WindowGroup {
@@ -10,12 +11,18 @@ struct PortermillsApp: App {
                 if authStore.isAuthenticated {
                     ContentView()
                 } else {
-                    LoginView()
+                    LoginView(viewModel: login)
                 }
             }
             .environmentObject(authStore)
-            .task {
-                await APIClient.shared.configure(authStore: authStore)
+            // Magic-link sign-in: portermills://auth?token=…
+            .onOpenURL { url in
+                guard url.scheme == "portermills", url.host == "auth",
+                      let token = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+                          .queryItems?.first(where: { $0.name == "token" })?.value,
+                      !token.isEmpty
+                else { return }
+                login.verify(token: token, authStore: authStore)
             }
         }
     }

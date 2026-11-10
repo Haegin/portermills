@@ -1,56 +1,29 @@
 import SwiftUI
 
 struct WishlistsView: View {
-    @StateObject private var vm = WishlistsViewModel()
+    @StateObject private var viewModel = WishlistsViewModel()
 
     var body: some View {
         NavigationStack {
-            List(vm.wishlists) { wishlist in
-                NavigationLink {
-                    WishlistDetailView(wishlist: wishlist, vm: vm)
-                } label: {
-                    Text(wishlist.user?.name ?? "Wishlist")
+            List(viewModel.wishlists) { wishlist in
+                NavigationLink(value: wishlist.id) {
+                    Label {
+                        VStack(alignment: .leading) {
+                            Text(wishlist.title)
+                            Text(itemCountLabel(wishlist.itemCount)).font(.subheadline).foregroundStyle(.secondary)
+                        }
+                    } icon: {
+                        Image(systemName: wishlist.isMine && !wishlist.isVisibleToFamily ? "eye.slash" : "gift")
+                    }
                 }
+                .accessibilityIdentifier("wishlist.\(wishlist.title)")
             }
             .navigationTitle("Wishlists")
-            .task { await vm.load() }
+            .navigationDestination(for: String.self) { id in WishlistDetailView(wishlistId: id) }
+            .toolbar { AccountMenu() }
+            .errorAlert($viewModel.error)
+            .task { await viewModel.load() }
+            .refreshable { await viewModel.load() }
         }
-    }
-}
-
-struct WishlistDetailView: View {
-    let wishlist: Wishlist
-    @ObservedObject var vm: WishlistsViewModel
-    @EnvironmentObject private var authStore: AuthStore
-
-    private var items: [WishlistItem] { vm.itemsByWishlist[wishlist.id] ?? [] }
-    private var isOwnWishlist: Bool { wishlist.userId == authStore.currentUser?.id }
-
-    var body: some View {
-        List(items) { item in
-            HStack {
-                VStack(alignment: .leading) {
-                    Text(item.name).font(.headline)
-                    if let price = item.price {
-                        Text(price, format: .currency(code: "USD")).font(.caption).foregroundStyle(.secondary)
-                    }
-                }
-                Spacer()
-                if !isOwnWishlist {
-                    Button {
-                        Task {
-                            item.isClaimed
-                                ? await vm.unclaimItem(item)
-                                : await vm.claimItem(item)
-                        }
-                    } label: {
-                        Image(systemName: item.isClaimed ? "gift.fill" : "gift")
-                            .foregroundStyle(item.isClaimed ? .green : .secondary)
-                    }
-                }
-            }
-        }
-        .navigationTitle(wishlist.user?.name.appending("'s Wishlist") ?? "Wishlist")
-        .task { await vm.loadItems(for: wishlist) }
     }
 }

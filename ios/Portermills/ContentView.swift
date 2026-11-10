@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// Root tab view for a signed-in user.
 struct ContentView: View {
     var body: some View {
         TabView {

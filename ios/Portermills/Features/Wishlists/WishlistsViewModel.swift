@@ -1,40 +1,74 @@
 import Foundation
 
+/// Everyone's wishlists.
 @MainActor
-final class WishlistsViewModel: ObservableObject {
-    @Published var wishlists: [Wishlist] = []
-    @Published var itemsByWishlist: [String: [WishlistItem]] = [:]
+final class WishlistsViewModel: LiveViewModel {
+    @Published private(set) var wishlists: [Wishlist] = []
 
-    func load() async {
-        wishlists = (try? await APIClient.shared.get("/wishlists")) ?? []
-    }
+    init() { super.init(feature: "wishlists") }
 
-    func loadItems(for wishlist: Wishlist) async {
-        let items: [WishlistItem] = (try? await APIClient.shared.get(
-            "/wishlists/\(wishlist.id)/items")) ?? []
-        itemsByWishlist[wishlist.id] = items
-    }
-
-    func claimItem(_ item: WishlistItem) async {
-        let _: EmptyResponse? = try? await APIClient.shared.post(
-            "/wishlists/items/\(item.id)/claim", body: EmptyBody())
-        refreshClaimed(item.id, claimed: true, wishlistId: item.wishlistId)
-    }
-
-    func unclaimItem(_ item: WishlistItem) async {
-        try? await APIClient.shared.delete("/wishlists/items/\(item.id)/claim")
-        refreshClaimed(item.id, claimed: false, wishlistId: item.wishlistId)
-    }
-
-    private func refreshClaimed(_ itemId: String, claimed: Bool, wishlistId: String) {
-        guard let idx = itemsByWishlist[wishlistId]?.firstIndex(where: { $0.id == itemId }) else { return }
-        let old = itemsByWishlist[wishlistId]![idx]
-        itemsByWishlist[wishlistId]![idx] = WishlistItem(
-            id: old.id, wishlistId: old.wishlistId, name: old.name,
-            url: old.url, notes: old.notes, price: old.price,
-            priority: old.priority, isClaimed: claimed)
+    override func load() async {
+        do {
+            let all = try await api.get("/wishlists", as: [Wishlist].self)
+            wishlists = all.filter(\.isMine) + all.filter { !$0.isMine }
+        } catch {
+            self.error = error.userMessage
+        }
     }
 }
 
-private struct EmptyBody: Encodable {}
-private struct EmptyResponse: Decodable {}
+/// One person's wishlist: editable by its owner, claimable by everyone else.
+@MainActor
+final class WishlistDetailViewModel: LiveViewModel {
+    let wishlistId: String
+    @Published private(set) var wishlist: Wishlist?
+    /// The wishlist was hidden from the family; the screen should close.
+    @Published private(set) var gone = false
+
+    var isMine: Bool { wishlist?.isMine == true }
+
+    init(wishlistId: String) {
+        self.wishlistId = wishlistId
+        // The server never sends claim events to a wishlist's owner.
+        super.init(feature: "wishlists")
+    }
+
+    override func load() async {
+        do {
+            wishlist = try await api.get("/wishlists/\(wishlistId)", as: Wishlist.self)
+        } catch where error.isNotFound {
+            gone = true
+        } catch {
+            self.error = error.userMessage
+        }
+    }
+
+    func save(_ existing: WishlistItem?, _ request: WishlistItemRequest) {
+        perform {
+            let base = "/wishlists/\(self.wishlistId)/items"
+            if let existing {
+                try await self.api.send("PATCH", "\(base)/\(existing.id)", body: request)
+            } else {
+                try await self.api.send("POST", base, body: request)
+            }
+        }
+    }
+
+    func delete(_ item: WishlistItem) {
+        perform { try await self.api.send("DELETE", "/wishlists/\(self.wishlistId)/items/\(item.id)") }
+    }
+
+    func claim(_ item: WishlistItem) {
+        perform { try await self.api.send("POST", "/wishlists/items/\(item.id)/claim") }
+    }
+
+    func release(_ item: WishlistItem) {
+        perform { try await self.api.send("DELETE", "/wishlists/items/\(item.id)/claim") }
+    }
+
+    func setVisibleToFamily(_ visible: Bool) {
+        perform {
+            try await self.api.send("PATCH", "/wishlists/\(self.wishlistId)", body: VisibilityRequest(isVisibleToFamily: visible))
+        }
+    }
+}

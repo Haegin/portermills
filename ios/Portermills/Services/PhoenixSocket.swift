@@ -1,75 +1,109 @@
+import Combine
 import Foundation
 
-// Thin Phoenix WebSocket client.
-// Join channels with `join(topic:onMessage:)`, push events with `push(_:event:payload:)`.
-// Reconnects automatically on disconnect.
+/// Something that happened on one of the family's channel topics.
+/// `feature` is "calendar", "lists" or "wishlists". `event` is the server's
+/// event name, or `SocketEvent.joined` each time the topic is (re)joined,
+/// which is the cue to refetch anything missed while disconnected.
+struct SocketEvent {
+    static let joined = "joined"
 
-final class PhoenixSocket: NSObject, URLSessionWebSocketDelegate {
+    let feature: String
+    let event: String
+}
+
+/// Phoenix Channels client (V2 serializer) over URLSessionWebSocketTask.
+///
+/// While signed in it stays connected: joins the family's three topics, sends
+/// heartbeats and reconnects after a drop. It only receives; all writes go
+/// through the REST API.
+@MainActor
+final class PhoenixSocket {
     static let shared = PhoenixSocket()
-    private override init() { super.init() }
 
-    private var webSocketTask: URLSessionWebSocketTask?
-    private var handlers: [String: (Any) -> Void] = [:]
+    private let subject = PassthroughSubject<SocketEvent, Never>()
+    private var connection: Task<Void, Never>?
     private var ref = 0
-    private var token: String?
 
-    private let baseURL = URL(string: ProcessInfo.processInfo.environment["SOCKET_URL"]
-        ?? "ws://localhost:4000/socket/websocket")!
+    private static let features = ["calendar", "lists", "wishlists"]
 
-    func connect(token: String) {
-        self.token = token
-        var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)!
-        components.queryItems = [URLQueryItem(name: "token", value: token)]
-        let session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
-        webSocketTask = session.webSocketTask(with: components.url!)
-        webSocketTask?.resume()
-        receive()
+    private init() {}
+
+    func events(for feature: String) -> AnyPublisher<SocketEvent, Never> {
+        subject.filter { $0.feature == feature }.eraseToAnyPublisher()
     }
 
-    func join(topic: String, onMessage: @escaping (Any) -> Void) {
-        handlers[topic] = onMessage
-        push(topic: topic, event: "phx_join", payload: [:])
+    func start(token: String, familyId: String) {
+        stop()
+        connection = Task { await self.run(token: token, familyId: familyId) }
     }
 
-    func leave(topic: String) {
-        handlers.removeValue(forKey: topic)
-        push(topic: topic, event: "phx_leave", payload: [:])
+    func stop() {
+        connection?.cancel()
+        connection = nil
     }
 
-    func push(topic: String, event: String, payload: [String: Any]) {
-        ref += 1
-        let msg: [Any?] = [nil, "\(ref)", topic, event, payload]
-        guard let data = try? JSONSerialization.data(withJSONObject: msg),
-              let str = String(data: data, encoding: .utf8) else { return }
-        webSocketTask?.send(.string(str)) { _ in }
-    }
+    private func run(token: String, familyId: String) async {
+        while !Task.isCancelled {
+            guard let base = APIClient.shared.socketURL,
+                  var components = URLComponents(url: base, resolvingAgainstBaseURL: false) else { return }
+            components.queryItems = [
+                URLQueryItem(name: "vsn", value: "2.0.0"),
+                URLQueryItem(name: "token", value: token),
+            ]
+            guard let url = components.url else { return }
 
-    private func receive() {
-        webSocketTask?.receive { [weak self] result in
-            guard let self else { return }
-            if case .success(let msg) = result, case .string(let str) = msg {
-                self.handle(str)
+            let socket = URLSession.shared.webSocketTask(with: url)
+            socket.resume()
+            for feature in Self.features {
+                send(socket, topic: "family:\(familyId):\(feature)", event: "phx_join")
             }
-            self.receive()
+
+            let heartbeat = Task {
+                while !Task.isCancelled {
+                    try? await Task.sleep(for: .seconds(30))
+                    self.send(socket, topic: "phoenix", event: "heartbeat")
+                }
+            }
+
+            await withTaskCancellationHandler {
+                while let message = try? await socket.receive() {
+                    if case .string(let text) = message { self.handle(text) }
+                }
+            } onCancel: {
+                socket.cancel(with: .goingAway, reason: nil)
+            }
+
+            heartbeat.cancel()
+            socket.cancel(with: .goingAway, reason: nil)
+            try? await Task.sleep(for: .seconds(3))
         }
     }
 
-    private func handle(_ message: String) {
-        guard let data = message.data(using: .utf8),
-              let arr = try? JSONSerialization.jsonObject(with: data) as? [Any?],
-              arr.count >= 5,
-              let topic = arr[2] as? String,
-              let event = arr[3] as? String,
-              event != "phx_reply",
-              let payload = arr[4] else { return }
-        handlers[topic]?(payload)
+    private func send(_ socket: URLSessionWebSocketTask, topic: String, event: String) {
+        ref += 1
+        let frame = "[\"\(ref)\",\"\(ref)\",\"\(topic)\",\"\(event)\",{}]"
+        socket.send(.string(frame)) { _ in }
     }
 
-    func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask,
-                    didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
-            guard let token = self?.token else { return }
-            self?.connect(token: token)
+    /// Frames are `[join_ref, ref, topic, event, payload]`.
+    private func handle(_ text: String) {
+        guard let data = text.data(using: .utf8),
+              let frame = try? JSONSerialization.jsonObject(with: data) as? [Any],
+              frame.count >= 5,
+              let topic = frame[2] as? String,
+              let event = frame[3] as? String,
+              topic.hasPrefix("family:"),
+              let feature = topic.split(separator: ":").last.map(String.init)
+        else { return }
+
+        if event == "phx_reply" {
+            let payload = frame[4] as? [String: Any]
+            let joined = payload?["status"] as? String == "ok"
+                && (payload?["response"] as? [String: Any])?.isEmpty == true
+            if joined { subject.send(SocketEvent(feature: feature, event: SocketEvent.joined)) }
+        } else if !event.hasPrefix("phx_") {
+            subject.send(SocketEvent(feature: feature, event: event))
         }
     }
 }

@@ -1,11 +1,8 @@
 import SwiftUI
 
 struct LoginView: View {
-    @EnvironmentObject private var authStore: AuthStore
-    @State private var email = ""
-    @State private var isLoading = false
-    @State private var linkSent = false
-    @State private var errorMessage: String?
+    @ObservedObject var viewModel: LoginViewModel
+    @FocusState private var emailFocused: Bool
 
     var body: some View {
         VStack(spacing: 24) {
@@ -14,44 +11,56 @@ struct LoginView: View {
             Text("Portermills")
                 .font(.largeTitle.bold())
 
-            if linkSent {
+            if let sentTo = viewModel.sentTo {
                 VStack(spacing: 12) {
                     Image(systemName: "envelope.open")
                         .font(.system(size: 48))
                         .foregroundStyle(.secondary)
                     Text("Check your email")
                         .font(.headline)
-                    Text("Tap the link in the email to sign in.")
+                    Text("If \(sentTo) belongs to a family member, a sign-in link is on its way. Open it on this phone.")
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
+                    if viewModel.busy { ProgressView() }
+                    if let error = viewModel.error {
+                        Text(error).foregroundStyle(.red).font(.callout).multilineTextAlignment(.center)
+                    }
+                    Button("Use a different email") { viewModel.startOver() }
                 }
             } else {
                 VStack(spacing: 16) {
-                    TextField("Email address", text: $email)
-                        .keyboardType(.emailAddress)
-                        .autocapitalization(.none)
-                        .textFieldStyle(.roundedBorder)
+                    Text("Sign in with your email and we'll send you a link.")
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
 
-                    if let error = errorMessage {
-                        Text(error)
-                            .foregroundStyle(.red)
-                            .font(.caption)
+                    TextField("Email", text: $viewModel.email)
+                        .keyboardType(.emailAddress)
+                        .textContentType(.emailAddress)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .submitLabel(.send)
+                        .onSubmit { if viewModel.canSend { viewModel.requestLink() } }
+                        .focused($emailFocused)
+                        .padding(12)
+                        .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 10))
+                        .accessibilityIdentifier("login.email")
+
+                    if let error = viewModel.error {
+                        Text(error).foregroundStyle(.red).font(.callout).multilineTextAlignment(.center)
                     }
 
                     Button {
-                        Task { await requestLink() }
+                        viewModel.requestLink()
                     } label: {
                         Group {
-                            if isLoading {
-                                ProgressView()
-                            } else {
-                                Text("Send magic link")
-                            }
+                            if viewModel.busy { ProgressView() } else { Text("Send sign-in link") }
                         }
                         .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(email.isEmpty || isLoading)
+                    .disabled(!viewModel.canSend)
+                    .accessibilityIdentifier("login.send")
                 }
             }
 
@@ -59,19 +68,4 @@ struct LoginView: View {
         }
         .padding(32)
     }
-
-    private func requestLink() async {
-        isLoading = true
-        errorMessage = nil
-        do {
-            let _: EmptyResponse = try await APIClient.shared.post("/auth/magic-link",
-                body: MagicLinkRequest(email: email))
-            linkSent = true
-        } catch {
-            errorMessage = "Something went wrong. Try again."
-        }
-        isLoading = false
-    }
 }
-
-private struct EmptyResponse: Decodable {}
