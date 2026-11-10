@@ -1,6 +1,9 @@
 package app.portermills.data.api
 
 import app.portermills.BuildConfig
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -11,60 +14,91 @@ import okhttp3.logging.HttpLoggingInterceptor
 import javax.inject.Inject
 import javax.inject.Singleton
 
-val json = Json {
-    ignoreUnknownKeys = true
-    coerceInputValues = true
-    encodeDefaults = true
-}
+class ApiException(val code: Int, val body: String) : Exception("HTTP $code")
 
 @Singleton
-class ApiClient @Inject constructor(private val authDataStore: AuthDataStore) {
+class ApiClient @Inject constructor(private val auth: AuthDataStore) {
+    /** Public because the inline helpers below are inlined into callers. */
+    val json = Json {
+        ignoreUnknownKeys = true
+        coerceInputValues = true
+        encodeDefaults = true
+        explicitNulls = false
+    }
+
     private val client = OkHttpClient.Builder()
-        .addInterceptor { chain ->
-            val token = authDataStore.tokenBlocking
-            val req = chain.request().newBuilder().apply {
-                header("Content-Type", "application/json")
-                if (token != null) header("Authorization", "Bearer $token")
-            }.build()
-            chain.proceed(req)
-        }
         .addInterceptor(HttpLoggingInterceptor().apply {
-            level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY
-                    else HttpLoggingInterceptor.Level.NONE
+            level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BASIC
+            else HttpLoggingInterceptor.Level.NONE
         })
         .build()
 
-    private val baseUrl = BuildConfig.API_BASE_URL
     private val mediaType = "application/json".toMediaType()
 
-    suspend inline fun <reified T> get(path: String): T {
-        val req = Request.Builder().url("$baseUrl$path").get().build()
-        return execute(req)
-    }
+    /**
+     * Performs a request off the caller's thread and returns the response body.
+     * Throws [ApiException] for a non-2xx status and IOException when the
+     * server can't be reached. A 401 ends the session.
+     */
+    suspend fun request(method: String, path: String, body: String? = null): String =
+        withContext(Dispatchers.IO) {
+            val requestBody = body?.toRequestBody(mediaType)
+                ?: if (method == "POST" || method == "PATCH") "{}".toRequestBody(mediaType) else null
 
-    suspend inline fun <reified B, reified T> post(path: String, body: B): T {
-        val reqBody = json.encodeToString(body).toRequestBody(mediaType)
-        val req = Request.Builder().url("$baseUrl$path").post(reqBody).build()
-        return execute(req)
-    }
+            val request = Request.Builder()
+                .url(BuildConfig.API_BASE_URL + path)
+                .method(method, requestBody)
+                .apply { auth.session?.let { header("Authorization", "Bearer ${it.token}") } }
+                .build()
 
-    suspend inline fun <reified B, reified T> patch(path: String, body: B): T {
-        val reqBody = json.encodeToString(body).toRequestBody(mediaType)
-        val req = Request.Builder().url("$baseUrl$path").patch(reqBody).build()
-        return execute(req)
-    }
+            client.newCall(request).execute().use { response ->
+                val text = response.body?.string().orEmpty()
+                if (response.code == 401 && auth.session != null) auth.clear()
+                if (!response.isSuccessful) throw ApiException(response.code, text)
+                text
+            }
+        }
+
+    suspend inline fun <reified T> get(path: String): T =
+        json.decodeFromString(request("GET", path))
+
+    suspend inline fun <reified B, reified T> post(path: String, body: B): T =
+        json.decodeFromString(request("POST", path, json.encodeToString(body)))
+
+    suspend inline fun <reified T> post(path: String): T =
+        json.decodeFromString(request("POST", path))
+
+    suspend inline fun <reified B, reified T> patch(path: String, body: B): T =
+        json.decodeFromString(request("PATCH", path, json.encodeToString(body)))
+
+    suspend inline fun <reified T> deleteReturning(path: String): T =
+        json.decodeFromString(request("DELETE", path))
 
     suspend fun delete(path: String) {
-        val req = Request.Builder().url("$baseUrl$path").delete().build()
-        execute<Unit>(req)
-    }
-
-    suspend inline fun <reified T> execute(request: Request): T {
-        val response = client.newCall(request).execute()
-        if (!response.isSuccessful) throw ApiException(response.code)
-        if (T::class == Unit::class) return Unit as T
-        return json.decodeFromString(response.body!!.string())
+        request("DELETE", path)
     }
 }
 
-class ApiException(val code: Int) : Exception("HTTP $code")
+/** Runs [block], turning failures (but not cancellation) into a [Result]. */
+suspend fun <T> attempt(block: suspend () -> T): Result<T> =
+    try {
+        Result.success(block())
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+/** A short message for showing a failed request to the user. */
+fun Throwable.userMessage(): String = when (this) {
+    is ApiException -> when (code) {
+        401 -> "You've been signed out."
+        403 -> "You're not allowed to do that."
+        404 -> "That no longer exists."
+        409 -> "Someone else got there first."
+        422 -> "That couldn't be saved. Check the details and try again."
+        else -> "The server returned an error ($code)."
+    }
+    is java.io.IOException -> "Can't reach the server."
+    else -> "Something went wrong."
+}

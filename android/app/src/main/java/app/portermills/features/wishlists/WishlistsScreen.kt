@@ -1,87 +1,53 @@
 package app.portermills.features.wishlists
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CardGiftcard
-import androidx.compose.material.icons.outlined.CardGiftcard
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.portermills.ui.components.AccountMenu
+import app.portermills.ui.components.ErrorSnackbar
 
 @Composable
-fun WishlistsScreen(vm: WishlistsViewModel = hiltViewModel()) {
-    val navController = rememberNavController()
-    val wishlists by vm.wishlists.collectAsState()
+fun WishlistsScreen(onOpenWishlist: (String) -> Unit, viewModel: WishlistsViewModel = hiltViewModel()) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val snackbar = remember { SnackbarHostState() }
 
-    NavHost(navController, startDestination = "wishlists") {
-        composable("wishlists") {
-            WishlistListScreen(wishlists) { w -> navController.navigate("wishlist/${w.id}") }
-        }
-        composable("wishlist/{id}") { back ->
-            val id = back.arguments?.getString("id") ?: return@composable
-            val wishlist = wishlists.find { it.id == id } ?: return@composable
-            WishlistDetailScreen(wishlist, vm)
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun WishlistListScreen(wishlists: List<Wishlist>, onSelect: (Wishlist) -> Unit) {
-    Scaffold(topBar = { TopAppBar(title = { Text("Wishlists") }) }) { padding ->
-        LazyColumn(contentPadding = PaddingValues(top = padding.calculateTopPadding())) {
-            items(wishlists, key = { it.id }) { w ->
-                ListItem(
-                    headlineContent = { Text(w.user?.name ?: "Wishlist") },
-                    modifier = Modifier.clickable { onSelect(w) },
-                )
-                HorizontalDivider()
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun WishlistDetailScreen(wishlist: Wishlist, vm: WishlistsViewModel) {
-    val allItems by vm.items.collectAsState()
-    val currentUserId by vm.currentUserId.collectAsState()
-    val items = allItems[wishlist.id] ?: emptyList()
-    val isOwnWishlist = wishlist.userId == currentUserId
-
-    LaunchedEffect(wishlist.id) { vm.loadItems(wishlist.id) }
+    ErrorSnackbar(state.error, snackbar, viewModel::errorShown)
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("${wishlist.user?.name ?: "Wishlist"}") }) }
+        topBar = { TopAppBar(title = { Text("Wishlists") }, actions = { AccountMenu() }) },
+        snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
-        LazyColumn(contentPadding = PaddingValues(top = padding.calculateTopPadding())) {
-            items(items, key = { it.id }) { item ->
+        LazyColumn(Modifier.fillMaxSize().padding(padding)) {
+            items(state.mine + state.others, key = { it.id }) { wishlist ->
                 ListItem(
-                    headlineContent = { Text(item.name) },
-                    supportingContent = item.price?.let { { Text("$$it") } },
-                    trailingContent = if (!isOwnWishlist) {
-                        {
-                            IconButton(onClick = { vm.toggleClaim(item) }) {
-                                Icon(
-                                    if (item.isClaimed) Icons.Filled.CardGiftcard
-                                    else Icons.Outlined.CardGiftcard,
-                                    contentDescription = if (item.isClaimed) "Unclaim" else "Claim",
-                                    tint = if (item.isClaimed) MaterialTheme.colorScheme.primary
-                                           else MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
+                    leadingContent = { Icon(Icons.Default.CardGiftcard, contentDescription = null) },
+                    headlineContent = { Text(wishlist.title) },
+                    supportingContent = {
+                        Text(if (wishlist.itemCount == 1) "1 item" else "${wishlist.itemCount} items")
+                    },
+                    trailingContent = if (wishlist.isMine && !wishlist.isVisibleToFamily) {
+                        { Icon(Icons.Default.VisibilityOff, "Hidden from the family") }
                     } else null,
+                    modifier = Modifier.clickable { onOpenWishlist(wishlist.id) },
                 )
-                HorizontalDivider()
             }
         }
     }

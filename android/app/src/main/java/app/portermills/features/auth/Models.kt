@@ -7,6 +7,9 @@ import kotlinx.serialization.Serializable
 data class MagicLinkRequest(val email: String)
 
 @Serializable
+data class MagicLinkResponse(val message: String = "")
+
+@Serializable
 data class VerifyTokenRequest(val token: String)
 
 @Serializable

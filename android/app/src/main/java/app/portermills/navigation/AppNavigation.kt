@@ -1,71 +1,114 @@
 package app.portermills.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.CardGiftcard
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Checklist
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import app.portermills.data.api.AuthState
 import app.portermills.features.auth.AuthViewModel
 import app.portermills.features.auth.LoginScreen
 import app.portermills.features.calendar.CalendarScreen
+import app.portermills.features.lists.ListDetailScreen
 import app.portermills.features.lists.ListsScreen
+import app.portermills.features.wishlists.WishlistDetailScreen
 import app.portermills.features.wishlists.WishlistsScreen
 
-sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
-    object Calendar : Screen("calendar", "Calendar", Icons.Default.CalendarMonth)
-    object Lists : Screen("lists", "Lists", Icons.Default.Checklist)
-    object Wishlists : Screen("wishlists", "Wishlists", Icons.Default.CardGiftcard)
+/** A bottom-bar tab; [route] is a nested graph so detail screens keep their tab selected. */
+private enum class Tab(val route: String, val label: String, val icon: ImageVector) {
+    Calendar("calendar", "Calendar", Icons.Default.CalendarMonth),
+    Lists("lists", "Lists", Icons.Default.Checklist),
+    Wishlists("wishlists", "Wishlists", Icons.Default.CardGiftcard),
 }
 
-private val mainScreens = listOf(Screen.Calendar, Screen.Lists, Screen.Wishlists)
+@Composable
+fun AppNavigation(authViewModel: AuthViewModel) {
+    val auth by authViewModel.authState.collectAsStateWithLifecycle()
+
+    when (auth) {
+        AuthState.Loading -> Surface(Modifier.fillMaxSize()) {
+            Box(contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+        }
+        AuthState.SignedOut -> LoginScreen(authViewModel)
+        is AuthState.SignedIn -> MainTabs()
+    }
+}
 
 @Composable
-fun AppNavigation() {
-    val authVm: AuthViewModel = hiltViewModel()
-    val isAuthenticated by authVm.isAuthenticated.collectAsState()
-
-    if (!isAuthenticated) {
-        LoginScreen(viewModel = authVm)
-        return
-    }
-
+private fun MainTabs() {
     val navController = rememberNavController()
+    val currentEntry by navController.currentBackStackEntryAsState()
 
     Scaffold(
+        // Each screen has its own top bar and handles the status-bar inset itself.
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             NavigationBar {
-                val currentEntry by navController.currentBackStackEntryAsState()
-                val currentDest = currentEntry?.destination
-                mainScreens.forEach { screen ->
+                for (tab in Tab.entries) {
                     NavigationBarItem(
-                        icon = { Icon(screen.icon, contentDescription = screen.label) },
-                        label = { Text(screen.label) },
-                        selected = currentDest?.hierarchy?.any { it.route == screen.route } == true,
+                        icon = { Icon(tab.icon, contentDescription = null) },
+                        label = { Text(tab.label) },
+                        selected = currentEntry?.destination?.hierarchy?.any { it.route == tab.route } == true,
                         onClick = {
-                            navController.navigate(screen.route) {
+                            navController.navigate(tab.route) {
                                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true
                             }
-                        }
+                        },
                     )
                 }
             }
-        }
+        },
     ) { padding ->
-        NavHost(navController, startDestination = Screen.Calendar.route) {
-            composable(Screen.Calendar.route) { CalendarScreen() }
-            composable(Screen.Lists.route) { ListsScreen() }
-            composable(Screen.Wishlists.route) { WishlistsScreen() }
+        NavHost(
+            navController = navController,
+            startDestination = Tab.Calendar.route,
+            modifier = Modifier.padding(padding).consumeWindowInsets(padding),
+        ) {
+            navigation(startDestination = "calendar/month", route = Tab.Calendar.route) {
+                composable("calendar/month") { CalendarScreen() }
+            }
+            navigation(startDestination = "lists/all", route = Tab.Lists.route) {
+                composable("lists/all") {
+                    ListsScreen(onOpenList = { id -> navController.navigate("lists/list/$id") })
+                }
+                composable("lists/list/{listId}") {
+                    ListDetailScreen(onBack = { navController.popBackStack() })
+                }
+            }
+            navigation(startDestination = "wishlists/all", route = Tab.Wishlists.route) {
+                composable("wishlists/all") {
+                    WishlistsScreen(onOpenWishlist = { id -> navController.navigate("wishlists/wishlist/$id") })
+                }
+                composable("wishlists/wishlist/{wishlistId}") {
+                    WishlistDetailScreen(onBack = { navController.popBackStack() })
+                }
+            }
         }
     }
 }

@@ -3,10 +3,13 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.google.services)
-    kotlin("kapt")
 }
+
+val devServerHost = providers.gradleProperty("devServerHost").get()
+val devServerPort = providers.gradleProperty("devServerPort").get()
+val prodServerHost = providers.gradleProperty("prodServerHost").get()
 
 android {
     namespace = "app.portermills"
@@ -18,17 +21,18 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-
-        buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:4000/api\"")
-        buildConfigField("String", "SOCKET_URL", "\"ws://10.0.2.2:4000/socket/websocket\"")
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "API_BASE_URL", "\"http://$devServerHost:$devServerPort/api\"")
+            buildConfigField("String", "SOCKET_URL", "\"ws://$devServerHost:$devServerPort/socket/websocket\"")
+        }
         release {
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            buildConfigField("String", "API_BASE_URL", "\"https://api.portermills.app/api\"")
-            buildConfigField("String", "SOCKET_URL", "\"wss://api.portermills.app/socket/websocket\"")
+            buildConfigField("String", "API_BASE_URL", "\"https://$prodServerHost/api\"")
+            buildConfigField("String", "SOCKET_URL", "\"wss://$prodServerHost/socket/websocket\"")
         }
     }
 
@@ -37,7 +41,13 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions { jvmTarget = "17" }
+    kotlinOptions {
+        jvmTarget = "17"
+        freeCompilerArgs += listOf(
+            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+            "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi",
+        )
+    }
 
     buildFeatures {
         compose = true
@@ -48,6 +58,7 @@ android {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
@@ -58,12 +69,12 @@ dependencies {
     implementation(libs.androidx.material.icons)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
+    ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.datastore.preferences)
-    debugImplementation(libs.androidx.ui.tooling.preview)
+    debugImplementation(libs.androidx.ui.tooling)
 }
