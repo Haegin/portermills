@@ -34,3 +34,4 @@ xcuserdata/
 *.swo
 .idea/
 .vscode/settings.json
+erl_crash.dump
