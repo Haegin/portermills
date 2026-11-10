@@ -13,14 +13,17 @@ defmodule Portermills.Wishlists.WishlistItem do
     field :priority, Ecto.Enum, values: [:low, :medium, :high], default: :medium
 
     belongs_to :wishlist, Portermills.Wishlists.Wishlist
-    has_one :claim, Portermills.Wishlists.Claim
+    has_one :claim, Portermills.Wishlists.Claim, foreign_key: :item_id
 
     timestamps(type: :utc_datetime)
   end
 
   def changeset(item, attrs) do
     item
-    |> cast(attrs, [:name, :url, :notes, :price, :priority, :wishlist_id])
+    |> cast(attrs, [:name, :url, :notes, :price, :priority])
     |> validate_required([:name, :wishlist_id])
+    |> validate_length(:name, max: 255)
+    |> validate_length(:url, max: 255)
+    |> validate_number(:price, greater_than_or_equal_to: 0, less_than: 100_000_000)
   end
 end

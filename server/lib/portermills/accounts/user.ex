@@ -17,9 +17,10 @@ defmodule Portermills.Accounts.User do
 
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:name, :email, :role, :family_id])
+    |> cast(attrs, [:name, :email, :role])
     |> validate_required([:name, :email, :family_id])
-    |> validate_format(:email, ~r/@/)
+    |> update_change(:email, &(&1 |> String.trim() |> String.downcase()))
+    |> validate_format(:email, ~r/^[^\s@]+@[^\s@]+$/)
     |> unique_constraint(:email)
   end
 end

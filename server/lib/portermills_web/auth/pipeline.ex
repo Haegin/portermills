@@ -7,4 +7,9 @@ defmodule PortermillsWeb.Auth.Pipeline do
   plug Guardian.Plug.VerifyHeader, scheme: "Bearer"
   plug Guardian.Plug.EnsureAuthenticated
   plug Guardian.Plug.LoadResource
+  plug :assign_current_user
+
+  defp assign_current_user(conn, _opts) do
+    Plug.Conn.assign(conn, :current_user, Guardian.Plug.current_resource(conn))
+  end
 end

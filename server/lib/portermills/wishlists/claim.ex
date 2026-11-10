@@ -14,9 +14,9 @@ defmodule Portermills.Wishlists.Claim do
     timestamps(type: :utc_datetime)
   end
 
-  def changeset(claim, attrs) do
+  def changeset(claim, attrs \\ %{}) do
     claim
-    |> cast(attrs, [:item_id, :claimed_by_id])
+    |> cast(attrs, [])
     |> validate_required([:item_id, :claimed_by_id])
     |> unique_constraint(:item_id)
   end

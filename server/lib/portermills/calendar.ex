@@ -3,21 +3,24 @@ defmodule Portermills.Calendar do
   alias Portermills.Repo
   alias Portermills.Calendar.Event
 
-  def list_events_for_month(family_id, year, month) do
-    start = Date.new!(year, month, 1) |> DateTime.new!(Time.new!(0, 0, 0))
-    finish = start |> DateTime.add(Date.days_in_month(start) * 86_400, :second)
-
+  @doc "Events of a family that overlap the half-open range `[from, to)`."
+  def list_events(family_id, %DateTime{} = from, %DateTime{} = to) do
     Repo.all(
       from e in Event,
-        where: e.family_id == ^family_id and e.starts_at >= ^start and e.starts_at < ^finish,
-        order_by: e.starts_at
+        where: e.family_id == ^family_id and e.starts_at < ^to and e.ends_at >= ^from,
+        order_by: [e.starts_at, e.title]
     )
   end
 
-  def get_event!(id), do: Repo.get!(Event, id)
+  def get_event(family_id, id) do
+    case Ecto.UUID.cast(id) do
+      {:ok, id} -> Repo.get_by(Event, id: id, family_id: family_id)
+      :error -> nil
+    end
+  end
 
-  def create_event(attrs) do
-    %Event{}
+  def create_event(family_id, user_id, attrs) do
+    %Event{family_id: family_id, created_by_id: user_id}
     |> Event.changeset(attrs)
     |> Repo.insert()
   end

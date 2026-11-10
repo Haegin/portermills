@@ -2,23 +2,27 @@ import Config
 
 config :portermills,
   ecto_repos: [Portermills.Repo],
-  generators: [timestamp_type: :utc_datetime]
+  generators: [timestamp_type: :utc_datetime],
+  mail_from: {"Portermills", "noreply@localhost"},
+  log_magic_links: false
 
 config :portermills, PortermillsWeb.Endpoint,
   url: [host: "localhost"],
   adapter: Bandit.PhoenixAdapter,
   render_errors: [
-    formats: [json: PortermillsWeb.ErrorJSON],
+    formats: [json: PortermillsWeb.ErrorJSON, html: PortermillsWeb.ErrorHTML],
     layout: false
   ],
   pubsub_server: Portermills.PubSub,
   live_view: [signing_salt: "portermills_lv"]
 
 config :portermills, Portermills.Mailer, adapter: Swoosh.Adapters.Local
+config :swoosh, :api_client, false
 
 config :portermills, Portermills.Guardian,
   issuer: "portermills",
-  secret_key: System.get_env("GUARDIAN_SECRET") || "dev_secret_change_in_prod"
+  ttl: {52, :weeks},
+  secret_key: "dev_only_guardian_secret_overridden_in_runtime_exs_for_prod"
 
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",

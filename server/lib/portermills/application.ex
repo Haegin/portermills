@@ -5,9 +5,7 @@ defmodule Portermills.Application do
   def start(_type, _args) do
     children = [
       Portermills.Repo,
-      {DNSCluster, query: Application.get_env(:portermills, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Portermills.PubSub},
-      {Finch, name: Portermills.Finch},
       PortermillsWeb.Endpoint
     ]
 

@@ -16,12 +16,10 @@ defmodule PortermillsWeb do
 
   def controller do
     quote do
-      use Phoenix.Controller,
-        formats: [:json],
-        layouts: []
+      use Phoenix.Controller, formats: [:json]
 
       import Plug.Conn
-      alias PortermillsWeb.Router.Helpers, as: Routes
+      alias PortermillsWeb.Broadcast
 
       action_fallback PortermillsWeb.FallbackController
     end

@@ -1,22 +1,3 @@
-# Dependencies
-node_modules/
-.yarn/cache
-
-# Mobile build artifacts
-mobile/android/.gradle/
-mobile/android/app/build/
-mobile/android/local.properties
-mobile/ios/build/
-mobile/ios/Pods/
-mobile/ios/DerivedData/
-*.ipa
-*.apk
-*.aab
-
-# React Native
-mobile/.expo/
-mobile/.metro-cache/
-
 # Elixir/Phoenix
 server/_build/
 server/deps/
@@ -24,6 +5,23 @@ server/priv/static/
 server/.elixir_ls/
 server/cover/
 *.ez
+
+# Android
+android/.gradle/
+android/.kotlin/
+android/build/
+android/app/build/
+android/local.properties
+*.apk
+*.aab
+
+# iOS (the Xcode project is generated from ios/project.yml by XcodeGen)
+ios/Portermills.xcodeproj/
+ios/build/
+ios/DerivedData/
+ios/Local.xcconfig
+xcuserdata/
+*.ipa
 
 # Environment
 .env

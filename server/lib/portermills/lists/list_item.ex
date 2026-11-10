@@ -18,7 +18,8 @@ defmodule Portermills.Lists.ListItem do
 
   def changeset(item, attrs) do
     item
-    |> cast(attrs, [:name, :checked, :position, :list_id, :added_by_id])
-    |> validate_required([:name, :list_id, :added_by_id])
+    |> cast(attrs, [:name, :checked, :position])
+    |> validate_required([:name, :list_id])
+    |> validate_length(:name, max: 255)
   end
 end

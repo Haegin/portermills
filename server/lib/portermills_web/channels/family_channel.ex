@@ -1,44 +1,44 @@
 defmodule PortermillsWeb.FamilyChannel do
-  use Phoenix.Channel
+  @moduledoc """
+  Read-only notifications for a family. Topics: `family:<id>:calendar`,
+  `family:<id>:lists`, `family:<id>:wishlists`, each joined independently.
 
-  # Handles topics: "family:<id>:calendar", "family:<id>:lists", "family:<id>:wishlists"
-  # Each subtopic is joined independently so clients only subscribe to what they need.
+  All writes go through the REST API, which broadcasts here (see
+  `PortermillsWeb.Broadcast`).
+  """
+  use PortermillsWeb, :channel
 
+  @features ~w(calendar lists wishlists)
+
+  intercept ["wishlist:claims_changed"]
+
+  @impl true
   def join("family:" <> rest, _params, socket) do
-    [family_id | _] = String.split(rest, ":")
     user = socket.assigns.current_user
 
-    if user.family_id == family_id do
-      {:ok, assign(socket, :family_id, family_id)}
-    else
-      {:error, %{reason: "unauthorized"}}
+    case String.split(rest, ":") do
+      [family_id, feature] when feature in @features and family_id == user.family_id ->
+        {:ok, socket}
+
+      _ ->
+        {:error, %{reason: "unauthorized"}}
     end
   end
 
-  def handle_in("list:toggle_item", %{"item_id" => item_id, "checked" => checked}, socket) do
-    item = Portermills.Lists.get_item!(item_id)
-    {:ok, updated} = Portermills.Lists.toggle_item(item, checked)
-    broadcast!(socket, "list:item_updated", %{item: updated})
-    {:noreply, socket}
+  # Nothing is written through the channel.
+  @impl true
+  def handle_in(_event, _payload, socket) do
+    {:reply, {:error, %{reason: "unsupported"}}, socket}
   end
 
-  def handle_in("list:add_item", %{"list_id" => list_id, "name" => name}, socket) do
-    {:ok, item} = Portermills.Lists.add_item(%{
-      list_id: list_id,
-      name: name,
-      added_by_id: socket.assigns.current_user.id
-    })
-    broadcast!(socket, "list:item_added", %{item: item})
-    {:noreply, socket}
-  end
+  # The owner of a wishlist must not find out that one of their items was
+  # claimed or released, so they never receive this event.
+  @impl true
+  def handle_out("wishlist:claims_changed", %{owner_id: owner_id} = payload, socket) do
+    if socket.assigns.current_user.id != owner_id do
+      push(socket, "wishlist:claims_changed", Map.delete(payload, :owner_id))
+    end
 
-  def handle_in("calendar:create_event", params, socket) do
-    attrs = Map.merge(params, %{
-      "family_id" => socket.assigns.family_id,
-      "created_by_id" => socket.assigns.current_user.id
-    })
-    {:ok, event} = Portermills.Calendar.create_event(attrs)
-    broadcast!(socket, "calendar:event_created", %{event: event})
     {:noreply, socket}
   end
 end

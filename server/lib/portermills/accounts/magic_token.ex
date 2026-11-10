@@ -6,6 +6,7 @@ defmodule Portermills.Accounts.MagicToken do
   @foreign_key_type :binary_id
 
   schema "magic_tokens" do
+    # SHA-256 of the token that was emailed; the raw token is never stored.
     field :token, :string
     field :expires_at, :utc_datetime
     field :used_at, :utc_datetime
@@ -16,7 +17,7 @@ defmodule Portermills.Accounts.MagicToken do
 
   def changeset(magic_token, attrs) do
     magic_token
-    |> cast(attrs, [:token, :expires_at, :user_id])
+    |> cast(attrs, [:token, :expires_at])
     |> validate_required([:token, :expires_at, :user_id])
   end
 end

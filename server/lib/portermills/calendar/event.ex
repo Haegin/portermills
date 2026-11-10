@@ -19,9 +19,23 @@ defmodule Portermills.Calendar.Event do
     timestamps(type: :utc_datetime)
   end
 
+  # family_id and created_by_id are set by the context, never from request params.
   def changeset(event, attrs) do
     event
-    |> cast(attrs, [:title, :description, :starts_at, :ends_at, :all_day, :recurrence_rule, :family_id, :created_by_id])
-    |> validate_required([:title, :starts_at, :ends_at, :family_id, :created_by_id])
+    |> cast(attrs, [:title, :description, :starts_at, :ends_at, :all_day, :recurrence_rule])
+    |> validate_required([:title, :starts_at, :ends_at, :family_id])
+    |> validate_length(:title, max: 255)
+    |> validate_ends_after_start()
+  end
+
+  defp validate_ends_after_start(changeset) do
+    starts_at = get_field(changeset, :starts_at)
+    ends_at = get_field(changeset, :ends_at)
+
+    if starts_at && ends_at && DateTime.compare(ends_at, starts_at) == :lt do
+      add_error(changeset, :ends_at, "must not be before the start")
+    else
+      changeset
+    end
   end
 end

@@ -25,21 +25,18 @@ defmodule Portermills.MixProject do
 
   defp deps do
     [
-      {:phoenix, "~> 1.7"},
+      {:phoenix, "~> 1.7.14"},
       {:phoenix_ecto, "~> 4.5"},
       {:ecto_sql, "~> 3.11"},
       {:postgrex, "~> 0.18"},
-      {:phoenix_live_view, "~> 1.0"},
-      {:phoenix_live_dashboard, "~> 0.8"},
-      {:swoosh, "~> 1.5"},
-      {:finch, "~> 0.13"},
-      {:telemetry_metrics, "~> 1.0"},
-      {:telemetry_poller, "~> 1.0"},
+      {:phoenix_html, "~> 4.1"},
+      {:phoenix_live_view, "~> 1.0.0"},
+      {:swoosh, "~> 1.16"},
+      {:gen_smtp, "~> 1.2"},
       {:jason, "~> 1.2"},
-      {:dns_cluster, "~> 0.1"},
       {:bandit, "~> 1.5"},
       {:guardian, "~> 2.3"},
-      {:cors_plug, "~> 3.0"}
+      {:floki, ">= 0.30.0", only: :test}
     ]
   end
 
