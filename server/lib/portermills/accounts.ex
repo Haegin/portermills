@@ -28,6 +28,33 @@ defmodule Portermills.Accounts do
     %User{family_id: family_id} |> User.changeset(attrs) |> Repo.insert()
   end
 
+  @doc """
+  Adds a family member (there is no sign-up). The user joins the family named
+  `family_name`, creating it if needed, or the only family when `family_name`
+  is nil. Used by `mix portermills.add_user` and `bin/add_user` in releases.
+  """
+  def add_family_member(name, email, role, family_name \\ nil) do
+    with {:ok, family} <- find_or_create_family(family_name),
+         {:ok, user} <- create_user(family, %{name: name, email: email, role: role}) do
+      {:ok, user, family}
+    end
+  end
+
+  defp find_or_create_family(nil) do
+    case Repo.all(Family) do
+      [family] -> {:ok, family}
+      [] -> {:error, "no family exists yet; pass a family name to create one"}
+      _ -> {:error, "more than one family exists; pass a family name"}
+    end
+  end
+
+  defp find_or_create_family(name) do
+    case Repo.get_by(Family, name: name) do
+      nil -> create_family(%{name: name})
+      family -> {:ok, family}
+    end
+  end
+
   def list_family_members(family_id) do
     Repo.all(from u in User, where: u.family_id == ^family_id, order_by: u.name)
   end

@@ -1,0 +1,17 @@
+[Unit]
+Description=Porter-Mills server
+Requires=postgresql.service
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+User=portermills
+Group=portermills
+WorkingDirectory=/opt/portermills/app
+Environment=LANG=C.UTF-8
+ExecStart=/opt/portermills/app/bin/portermills start
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,5 @@
+#!/bin/sh
+# Runs any pending database migrations.
+set -eu
+cd -P -- "$(dirname -- "$0")"
+exec ./portermills eval 'Portermills.Release.migrate()'

@@ -1,0 +1,5 @@
+#!/bin/sh
+# Adds a family member: add_user NAME EMAIL [--admin] [--family NAME]
+set -eu
+cd -P -- "$(dirname -- "$0")"
+exec ./portermills eval 'Portermills.Release.add_user_cli(System.argv())' "$@"

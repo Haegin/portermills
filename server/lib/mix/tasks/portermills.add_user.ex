@@ -8,49 +8,18 @@ defmodule Mix.Tasks.Portermills.AddUser do
 
   The user joins the family named by `--family`, or the only family if there
   is exactly one. A family that doesn't exist yet is created.
+
+  In a release (no Mix), use `bin/add_user` with the same arguments.
   """
   use Mix.Task
 
-  alias Portermills.{Accounts, Repo}
-  alias Portermills.Accounts.Family
-
   @impl true
   def run(args) do
-    {opts, positional} = OptionParser.parse!(args, strict: [admin: :boolean, family: :string])
-
-    [name, email] =
-      case positional do
-        [_, _] -> positional
-        _ -> Mix.raise("usage: mix portermills.add_user NAME EMAIL [--admin] [--family NAME]")
-      end
-
     Mix.Task.run("app.start")
 
-    family = find_or_create_family(opts[:family])
-    role = if opts[:admin], do: :admin, else: :member
-
-    case Accounts.create_user(family, %{name: name, email: email, role: role}) do
-      {:ok, user} -> Mix.shell().info("Added #{user.name} <#{user.email}> to #{family.name}")
-      {:error, changeset} -> Mix.raise("could not add user: #{inspect(changeset.errors)}")
-    end
-  end
-
-  defp find_or_create_family(nil) do
-    case Repo.all(Family) do
-      [family] -> family
-      [] -> Mix.raise("no family exists yet; pass --family NAME to create one")
-      _ -> Mix.raise("more than one family exists; pass --family NAME")
-    end
-  end
-
-  defp find_or_create_family(name) do
-    case Repo.get_by(Family, name: name) do
-      nil ->
-        {:ok, family} = Accounts.create_family(%{name: name})
-        family
-
-      family ->
-        family
+    case Portermills.Release.add_user(args) do
+      {:ok, message} -> Mix.shell().info(message)
+      {:error, message} -> Mix.raise(message)
     end
   end
 end
