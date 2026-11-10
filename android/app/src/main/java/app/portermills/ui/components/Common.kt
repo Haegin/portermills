@@ -28,7 +28,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -86,7 +88,9 @@ fun TextPromptDialog(
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit,
 ) {
-    var text by remember { mutableStateOf(initial) }
+    // Start with the cursor after any pre-filled text, so typing appends to it.
+    var field by remember { mutableStateOf(TextFieldValue(initial, TextRange(initial.length))) }
+    val text = field.text
     val focus = remember { FocusRequester() }
     val submit = { if (text.isNotBlank()) onConfirm(text.trim()) }
 
@@ -95,8 +99,8 @@ fun TextPromptDialog(
         title = { Text(title) },
         text = {
             OutlinedTextField(
-                value = text,
-                onValueChange = { text = it },
+                value = field,
+                onValueChange = { field = it },
                 label = { Text(label) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
