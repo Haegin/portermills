@@ -62,8 +62,15 @@ Swift needs file names to be unique within a target, so model files are named
 **Project setup**: `brew install xcodegen`, then `cd ios && xcodegen` and open
 `Portermills.xcodeproj`. Re-run `xcodegen` after adding or removing files.
 
-**Distribution**: TestFlight (requires Apple Developer Program, $99/yr).
-Alternative without a developer account: AltStore / SideStore (re-signs every 7 days).
+**Distribution (current)**: free Apple ID signing, installed over USB with
+`ios/install-device.sh [DEVICE]`. It builds the Release configuration (which talks to
+`https://api.portermills.net`), signs with the personal team in `~/.portermills/ios-team`
+(or `DEVELOPMENT_TEAM`), registers the phone and installs/launches it with `devicectl`.
+Free signing expires after **7 days**, so the phone needs reinstalling weekly. First time
+on a phone: tap Trust, turn on Developer Mode (Settings → Privacy & Security), and trust
+the developer under Settings → General → VPN & Device Management. Needs an Xcode that
+supports the phone's iOS version (Xcode 27.2 for iOS 27).
+Later option: TestFlight via the Apple Developer Program ($99/yr), no weekly reinstall.
 
 ---
 
