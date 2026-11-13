@@ -108,8 +108,16 @@ android/app/src/main/java/app/portermills/
     └── wishlists/             # WishlistsViewModel, WishlistDetailViewModel, screens, Models
 ```
 
-**Distribution**: Firebase App Distribution (recommended) or direct APK sideload.
-Build: `cd android && ./gradlew bundleRelease`
+**Distribution**: APK sideload. Build with `cd android && ./gradlew assembleRelease`
+→ `app/build/outputs/apk/release/app-release.apk` (points at `https://api.portermills.net`).
+Bump `versionCode` in `app/build.gradle.kts` for each build you hand out.
+
+**Release signing**: the key is outside the repo, in `~/.portermills/android-release.jks`,
+described by `~/.portermills/android-release.properties`. The passwords in that file are
+1Password references (`op://Private/…`) that the build resolves with `op read`, so release
+builds need the 1Password CLI with desktop-app integration on. Only release tasks touch it.
+The master copy of the key and its password is the 1Password item "Porter-Mills Android
+signing key" (Private vault). Losing the key means installed apps can't be updated in place.
 
 ---
 
