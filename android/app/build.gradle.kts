@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -11,6 +13,24 @@ val devServerHost = providers.gradleProperty("devServerHost").get()
 val devServerPort = providers.gradleProperty("devServerPort").get()
 val prodServerHost = providers.gradleProperty("prodServerHost").get()
 
+// Release signing key, kept outside the repo. The properties file holds
+// storeFile, storePassword, keyAlias and keyPassword. Without it, release
+// builds come out unsigned. Override the location with -PreleaseSigning=…
+// A value starting with op:// is a 1Password secret reference, read with the
+// 1Password CLI (`op read`) when a release build is configured.
+val releaseSigning = Properties().apply {
+    val path = providers.gradleProperty("releaseSigning").orNull
+        ?: "${System.getProperty("user.home")}/.portermills/android-release.properties"
+    file(path).takeIf { it.exists() }?.inputStream()?.use { load(it) }
+}
+
+fun signingValue(key: String): String {
+    val value: String = releaseSigning.getProperty(key) ?: error("$key missing from release signing properties")
+    if (!value.startsWith("op://")) return value
+    return providers.exec { commandLine("op", "read", "--no-newline", value) }
+        .standardOutput.asText.get()
+}
+
 android {
     namespace = "app.portermills"
     compileSdk = 35
@@ -23,6 +43,20 @@ android {
         versionName = "1.0"
     }
 
+    // Only release tasks need the key, so debug builds never prompt 1Password.
+    val buildingRelease = gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) }
+
+    signingConfigs {
+        if (buildingRelease && !releaseSigning.isEmpty) {
+            create("release") {
+                storeFile = file(releaseSigning.getProperty("storeFile"))
+                storePassword = signingValue("storePassword")
+                keyAlias = releaseSigning.getProperty("keyAlias")
+                keyPassword = signingValue("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         debug {
             buildConfigField("String", "API_BASE_URL", "\"http://$devServerHost:$devServerPort/api\"")
@@ -30,6 +64,7 @@ android {
         }
         release {
             isMinifyEnabled = true
+            signingConfig = signingConfigs.findByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             buildConfigField("String", "API_BASE_URL", "\"https://$prodServerHost/api\"")
             buildConfigField("String", "SOCKET_URL", "\"wss://$prodServerHost/socket/websocket\"")
