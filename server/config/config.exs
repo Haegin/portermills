@@ -16,6 +16,9 @@ config :portermills, PortermillsWeb.Endpoint,
 
 config :portermills, Portermills.Mailer, adapter: Swoosh.Adapters.Local
 
+# The local mail adapter needs no HTTP client (Swoosh otherwise insists on hackney).
+config :swoosh, :api_client, false
+
 config :portermills, Portermills.Guardian,
   issuer: "portermills",
   secret_key: System.get_env("GUARDIAN_SECRET") || "dev_secret_change_in_prod"

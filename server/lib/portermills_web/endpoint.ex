@@ -1,6 +1,13 @@
 defmodule PortermillsWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :portermills
 
+  @session_options [
+    store: :cookie,
+    key: "_portermills_key",
+    signing_salt: "pm_session",
+    same_site: "Lax"
+  ]
+
   socket "/socket", PortermillsWeb.UserSocket,
     websocket: true,
     longpoll: false
