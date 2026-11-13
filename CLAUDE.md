@@ -130,6 +130,7 @@ server/lib/
 ├── portermills/            # Business logic (contexts)
 │   ├── accounts/           # Users, families, magic tokens
 │   ├── calendar/           # Calendar events
+│   ├── email_invites/      # Emailed calendar invites → family calendar (Fastmail JMAP)
 │   ├── lists/              # Shopping + packing lists
 │   └── wishlists/          # Wishlists (separate context)
 └── portermills_web/        # HTTP + WebSocket layer
@@ -143,6 +144,21 @@ server/lib/
 ### Calendar
 Shared family calendar. Events broadcast in real-time via Phoenix Channel
 (`family:<id>:calendar`). All family members see changes immediately.
+
+### Email invites
+Family members forward (or have organisers send) calendar invites to **app@portermills.net**;
+the `.ics` attachments become events on the sender's family calendar. Server-only — the
+apps just see new events (broadcast as `calendar:event_created|updated|deleted`).
+
+- `EmailInvites.Poller` polls the Fastmail account that receives that address via JMAP
+  (`EmailInvites.Fastmail`) every `INVITES_POLL_SECONDS`, and tags handled messages with
+  the `portermills_imported` keyword. It only runs when `FASTMAIL_API_TOKEN` is set.
+- Only mail from a family member's registered address is accepted, and only if Fastmail's
+  `Authentication-Results` header shows DMARC or aligned DKIM passed
+  (`EmailInvites.SenderVerification`) — `From:` alone is never trusted.
+- Invites are matched by iCalendar UID (`calendar_events.ical_uid`, unique per family):
+  updates with a newer `SEQUENCE` replace the event, `METHOD:CANCEL` deletes it.
+  Single-occurrence overrides (`RECURRENCE-ID`) and replies are skipped.
 
 ### Lists
 Shopping list and packing lists (multiple named packing lists for different occasions).
@@ -168,7 +184,7 @@ No code is shared with the `lists` context.
 - `magic_tokens` — (id, user_id, token, expires_at, used_at)
 
 ### Calendar
-- `calendar_events` — (id, family_id, created_by_id, title, description, starts_at, ends_at, all_day, recurrence_rule)
+- `calendar_events` — (id, family_id, created_by_id, title, description, starts_at, ends_at, all_day, recurrence_rule, ical_uid, ical_sequence)
 
 ### Lists
 - `lists` — (id, family_id, type: shopping|packing, name, archived)
@@ -202,7 +218,12 @@ The app points to `http://10.0.2.2:4000` (localhost from the Android emulator).
 
 ### Environment
 Copy `server/.env.example` → `server/.env` and fill in `DATABASE_URL`, `SECRET_KEY_BASE`,
-`GUARDIAN_SECRET`.
+`GUARDIAN_SECRET`. For email invites also set `FASTMAIL_API_TOKEN` (a Fastmail API token
+with read/write Mail access); optional: `INVITES_EMAIL_ADDRESS`, `INVITES_POLL_SECONDS`,
+`DEFAULT_TIME_ZONE`.
+
+### Tests
+`cd server && mix test` (needs Postgres; dependencies need Erlang/OTP 26+).
 
 ## Conventions
 

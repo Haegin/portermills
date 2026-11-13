@@ -29,4 +29,21 @@ defmodule Portermills.Calendar do
   end
 
   def delete_event(%Event{} = event), do: Repo.delete(event)
+
+  @doc "Finds the event imported from the invite with the given iCalendar UID."
+  def get_event_by_ical_uid(family_id, uid) do
+    Repo.get_by(Event, family_id: family_id, ical_uid: uid)
+  end
+
+  def create_imported_event(attrs) do
+    %Event{}
+    |> Event.import_changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def update_imported_event(%Event{} = event, attrs) do
+    event
+    |> Event.import_changeset(attrs)
+    |> Repo.update()
+  end
 end

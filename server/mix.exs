@@ -39,7 +39,9 @@ defmodule Portermills.MixProject do
       {:dns_cluster, "~> 0.1"},
       {:bandit, "~> 1.5"},
       {:guardian, "~> 2.3"},
-      {:cors_plug, "~> 3.0"}
+      {:cors_plug, "~> 3.0"},
+      {:req, "~> 0.5"},
+      {:tz, "~> 0.28"}
     ]
   end
 

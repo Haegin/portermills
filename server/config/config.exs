@@ -29,4 +29,18 @@ config :logger, :console,
 
 config :phoenix, :json_library, Jason
 
+# Needed to convert invite times given in a named zone (TZID=Europe/London) to UTC.
+config :elixir, :time_zone_database, Tz.TimeZoneDatabase
+
+# Email invites (see Portermills.EmailInvites). The poller itself is configured
+# from environment variables in config/runtime.exs.
+config :portermills, Portermills.EmailInvites,
+  # Used for "floating" invite times that carry no timezone at all.
+  default_time_zone: "Etc/UTC",
+  # Only trust Authentication-Results headers stamped by Fastmail's MX servers.
+  trusted_authserv_suffix: "messagingengine.com"
+
+config :portermills, Portermills.EmailInvites.Fastmail,
+  session_url: "https://api.fastmail.com/jmap/session"
+
 import_config "#{config_env()}.exs"
