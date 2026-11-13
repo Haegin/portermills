@@ -130,7 +130,7 @@ server/lib/
 ├── portermills/            # Business logic (contexts)
 │   ├── accounts/           # Users, families, magic tokens
 │   ├── calendar/           # Calendar events
-│   ├── email_invites/      # Emailed calendar invites → family calendar (Fastmail JMAP)
+│   ├── email_invites/      # Emailed calendar invites → family calendar (Postmark inbound)
 │   ├── lists/              # Shopping + packing lists
 │   └── wishlists/          # Wishlists (separate context)
 └── portermills_web/        # HTTP + WebSocket layer
@@ -147,18 +147,24 @@ Shared family calendar. Events broadcast in real-time via Phoenix Channel
 
 ### Email invites
 Family members forward (or have organisers send) calendar invites to **app@portermills.net**;
-the `.ics` attachments become events on the sender's family calendar. Server-only — the
-apps just see new events (broadcast as `calendar:event_created|updated|deleted`).
+the invites become events on the sender's family calendar. Server-only — the apps just see
+new events (broadcast as `calendar:event_created|updated|deleted`).
 
-- `EmailInvites.Poller` polls the Fastmail account that receives that address via JMAP
-  (`EmailInvites.Fastmail`) every `INVITES_POLL_SECONDS`, and tags handled messages with
-  the `portermills_imported` keyword. It only runs when `FASTMAIL_API_TOKEN` is set.
-- Only mail from a family member's registered address is accepted, and only if Fastmail's
-  `Authentication-Results` header shows DMARC or aligned DKIM passed
-  (`EmailInvites.SenderVerification`) — `From:` alone is never trusted.
+- **Routing**: app@portermills.net is a Fastmail alias that forwards to a Postmark inbound
+  address. Postmark POSTs each email to `POST /api/inbound/postmark`
+  (`PostmarkInboundController`, HTTP basic auth). The payload must include `RawEmail`
+  ("Include raw email content in JSON payload" in Postmark). Sending stays on Fastmail.
+- **Sender check**: the single `From:` address must belong to a family member, and the
+  message must carry a valid DKIM signature from that address's domain (or a parent
+  domain), verified by `EmailInvites.DKIM` against the key in DNS — `From:` alone is never
+  trusted. `rsa-sha1` and `l=` (partial body) signatures are refused.
+- **Parsing**: `EmailInvites.MIME` pulls calendar parts out of the raw MIME (inline,
+  attached, or inside a forwarded message); `EmailInvites.ICS` parses them.
 - Invites are matched by iCalendar UID (`calendar_events.ical_uid`, unique per family):
   updates with a newer `SEQUENCE` replace the event, `METHOD:CANCEL` deletes it.
   Single-occurrence overrides (`RECURRENCE-ID`) and replies are skipped.
+- Test emails in `server/test/fixtures/email_invites/` are DKIM-signed by
+  `generate.py` (dkimpy); regenerate them with it if you need new cases.
 
 ### Lists
 Shopping list and packing lists (multiple named packing lists for different occasions).
@@ -218,8 +224,8 @@ The app points to `http://10.0.2.2:4000` (localhost from the Android emulator).
 
 ### Environment
 Copy `server/.env.example` → `server/.env` and fill in `DATABASE_URL`, `SECRET_KEY_BASE`,
-`GUARDIAN_SECRET`. For email invites also set `FASTMAIL_API_TOKEN` (a Fastmail API token
-with read/write Mail access); optional: `INVITES_EMAIL_ADDRESS`, `INVITES_POLL_SECONDS`,
+`GUARDIAN_SECRET`. For email invites also set `POSTMARK_INBOUND_USERNAME` and
+`POSTMARK_INBOUND_PASSWORD` (the webhook's basic-auth credentials); optional:
 `DEFAULT_TIME_ZONE`.
 
 ### Tests

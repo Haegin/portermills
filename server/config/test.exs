@@ -16,6 +16,10 @@ config :portermills, PortermillsWeb.Endpoint,
 config :logger, level: :warning
 config :phoenix, :plug_init_mode, :runtime
 
-# Route Fastmail JMAP requests to Req.Test stubs instead of the network.
-config :portermills, Portermills.EmailInvites.Fastmail,
-  req_options: [plug: {Req.Test, Portermills.EmailInvites.Fastmail}, retry: false]
+# Email invite tests: fixed webhook credentials, and DKIM keys from a fixture file
+# instead of DNS.
+config :portermills, PortermillsWeb.PostmarkInboundController,
+  basic_auth: [username: "postmark", password: "test-webhook-secret"]
+
+config :portermills, Portermills.EmailInvites.DKIM,
+  txt_lookup: {Portermills.EmailInviteFixtures, :dns_txt}

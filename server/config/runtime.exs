@@ -1,14 +1,14 @@
 import Config
 
-# Email invites: poll the Fastmail mailbox that receives app@portermills.net and
-# add forwarded calendar invites to the sender's family calendar.
 if config_env() != :test do
-  if token = System.get_env("FASTMAIL_API_TOKEN") do
-    config :portermills, Portermills.EmailInvites.Poller,
-      enabled: true,
-      token: token,
-      address: System.get_env("INVITES_EMAIL_ADDRESS", "app@portermills.net"),
-      interval_ms: String.to_integer(System.get_env("INVITES_POLL_SECONDS", "60")) * 1000
+  # Email invites: Postmark POSTs inbound mail to /api/inbound/postmark using these
+  # basic-auth credentials (put them in the webhook URL). Unset = endpoint disabled.
+  username = System.get_env("POSTMARK_INBOUND_USERNAME")
+  password = System.get_env("POSTMARK_INBOUND_PASSWORD")
+
+  if username && password do
+    config :portermills, PortermillsWeb.PostmarkInboundController,
+      basic_auth: [username: username, password: password]
   end
 
   if time_zone = System.get_env("DEFAULT_TIME_ZONE") do

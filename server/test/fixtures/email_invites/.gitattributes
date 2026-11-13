@@ -1,0 +1,2 @@
+# DKIM-signed test emails: keep the exact bytes (CRLF line endings).
+*.eml -text

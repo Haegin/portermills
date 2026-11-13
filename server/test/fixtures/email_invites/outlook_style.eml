@@ -1,0 +1,68 @@
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=family.example;
+ i=@family.example; q=dns/txt; s=sel1; t=1794580676; h=from : to :
+ subject : date : message-id : mime-version : content-type;
+ bh=NejzAu7/EGqi0JeJ+R6j/k81PgSYNrezwTWbOOro2FM=;
+ b=s4DW9j7jbunIDwaXdFzRH5lwgJ8lNl5qDQRy8xgTxGiASP421Z47xcxOktSsajDfj7ToC
+ fG17huAskmr8KxfOhbCbdkuBvhzYIWdy6R/iZxYcyZ+G/p70ZwIo3MO0sZqI7mfXbR2CFMf
+ mBIQKngczaXNqIBa6iemFMefHivKl5y4BS+YQhyhTTKrHvUwpQFw8N77vrUScBqOQ0lrZfz
+ 4bpTw1tmLlI3KVSXyDeJj3DRo30Aqq92GItG25s2SF6NmI+V0rCcPEFx2akuvC2bBfJCWaG
+ VIgJFFuQ9H5/u0uL+HSuLxTmQz4E98d4CXJemFPRNCFYv7+se0AT4ed5zZIQ==
+From: "Dad" <dad@family.example>
+To: "Portermills" <app@portermills.net>
+Subject: FW: End of term assembly
+Date: Fri, 13 Nov 2026 12:05:00 +0000
+Message-ID: <outlook-style@family.example>
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+	boundary="_000_outlook_"
+
+--_000_outlook_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+Forwarding the assembly invite.
+
+--_000_outlook_
+Content-Type: text/calendar; charset="utf-8"; method=REQUEST
+Content-Transfer-Encoding: quoted-printable
+
+BEGIN:VCALENDAR
+METHOD:REQUEST
+PRODID:Microsoft Exchange Server 2010
+VERSION:2.0
+BEGIN:VTIMEZONE
+TZID:GMT Standard Time
+BEGIN:STANDARD
+DTSTART:16010101T020000
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0000
+RRULE:FREQ=3DYEARLY;INTERVAL=3D1;BYDAY=3D-1SU;BYMONTH=3D10
+END:STANDARD
+BEGIN:DAYLIGHT
+DTSTART:16010101T010000
+TZOFFSETFROM:+0000
+TZOFFSETTO:+0100
+RRULE:FREQ=3DYEARLY;INTERVAL=3D1;BYDAY=3D-1SU;BYMONTH=3D3
+END:DAYLIGHT
+END:VTIMEZONE
+BEGIN:VEVENT
+ORGANIZER;CN=3DHill School Office:mailto:office@hillschool.example
+DESCRIPTION;LANGUAGE=3Den-GB:Parents are invited to the end of term assembly. Ple=
+
+ ase arrive by 9:15.
+UID:040000008200E00074C5B7101A82E0080000000070D6F2B0D35BDB01000000000000000010
+ 000000C8A9B6B4C2A5E14D9C7D8E2F0A1B3C4D
+SUMMARY;LANGUAGE=3Den-GB:End of term assembly
+DTSTART;TZID=3DGMT Standard Time:20261218T091500
+DTEND;TZID=3DGMT Standard Time:20261218T103000
+CLASS:PUBLIC
+PRIORITY:5
+DTSTAMP:20261113T120000Z
+TRANSP:OPAQUE
+STATUS:CONFIRMED
+SEQUENCE:0
+LOCATION;LANGUAGE=3Den-GB:School hall
+END:VEVENT
+END:VCALENDAR
+
+--_000_outlook_--

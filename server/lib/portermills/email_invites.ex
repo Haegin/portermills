@@ -3,15 +3,17 @@ defmodule Portermills.EmailInvites do
   Adds calendar invites that family members email (or forward) to the app's address,
   app@portermills.net, to their family's calendar.
 
-  `Portermills.EmailInvites.Poller` fetches new mail from Fastmail and hands each
-  message to `import_email/1`, which:
+  app@portermills.net is a Fastmail alias that forwards to a Postmark inbound address;
+  Postmark POSTs each message to `PortermillsWeb.PostmarkInboundController`, which
+  passes the raw message to `import_email/1`. That:
 
-    1. looks up the family member whose address is in `From:`, and rejects the email
-       if there is none;
-    2. checks the mail server's DKIM/DMARC verdict so that `From:` can't be spoofed
-       (see `Portermills.EmailInvites.SenderVerification`);
-    3. parses each attached `.ics` and creates, updates or deletes events on the
-       sender's family calendar, broadcasting each change on `family:<id>:calendar`.
+    1. takes the single `From:` address and looks up the family member it belongs to,
+       rejecting the email if there is none;
+    2. requires a valid DKIM signature from the sender's domain, so that `From:` can't
+       be spoofed (see `Portermills.EmailInvites.DKIM`);
+    3. parses each calendar part (see `Portermills.EmailInvites.MIME`) and creates,
+       updates or deletes events on the sender's family calendar, broadcasting each
+       change on `family:<id>:calendar`.
 
   Invites are matched by their iCalendar UID, so a re-sent or updated invite updates
   the existing event (if its SEQUENCE is not older) and a cancellation removes it.
@@ -23,13 +25,7 @@ defmodule Portermills.EmailInvites do
   alias Portermills.{Accounts, Calendar}
   alias Portermills.Accounts.User
   alias Portermills.Calendar.Event
-  alias Portermills.EmailInvites.{ICS, SenderVerification}
-
-  @type email :: %{
-          required(:from) => String.t() | nil,
-          required(:authentication_results) => [String.t()],
-          required(:calendars) => [binary()]
-        }
+  alias Portermills.EmailInvites.{DKIM, ICS, MIME, RawEmail}
 
   @type outcome ::
           {:created, Event.t()}
@@ -38,21 +34,29 @@ defmodule Portermills.EmailInvites do
           | {:skipped, term()}
 
   @doc """
-  Imports the calendar attachments of one email.
+  Imports the calendar invites in one raw RFC 5322 email.
 
-  Returns `{:ok, outcomes}` (one per event in the attachments), or
+  Returns `{:ok, outcomes}` (one per event found; empty if there were none), or
   `{:rejected, reason}` if the email is not from a verified family member. Both are
-  final: the email should not be retried.
+  final: retrying the same email gives the same answer.
   """
-  @spec import_email(email()) :: {:ok, [outcome()]} | {:rejected, atom()}
-  def import_email(%{from: from, authentication_results: auth_results, calendars: calendars}) do
-    with {:ok, user} <- find_sender(from),
-         :ok <- SenderVerification.verify(from, auth_results, config(:trusted_authserv_suffix)) do
-      {:ok, Enum.flat_map(calendars, &import_calendar(&1, user))}
+  @spec import_email(binary()) :: {:ok, [outcome()]} | {:rejected, term()}
+  def import_email(raw) when is_binary(raw) do
+    message = RawEmail.parse(raw)
+
+    with {:ok, from} <- sender_address(message),
+         {:ok, user} <- find_sender(from),
+         :ok <- verify_signature(message, from) do
+      {:ok, message |> MIME.calendar_parts() |> Enum.flat_map(&import_calendar(&1, user))}
     end
   end
 
-  defp find_sender(nil), do: {:rejected, :no_sender}
+  defp sender_address(message) do
+    case RawEmail.from_address(message) do
+      {:ok, from} -> {:ok, from}
+      {:error, reason} -> {:rejected, reason}
+    end
+  end
 
   defp find_sender(from) do
     case Accounts.find_user_by_email(from) do
@@ -61,7 +65,21 @@ defmodule Portermills.EmailInvites do
     end
   end
 
-  defp import_calendar(data, user) do
+  defp verify_signature(message, from) do
+    [_local, domain] = String.split(from, "@", parts: 2)
+
+    case DKIM.verify(message, domain) do
+      :ok -> :ok
+      {:error, reasons} -> {:rejected, {:sender_not_authenticated, reasons}}
+    end
+  end
+
+  @doc """
+  Applies the events of one iCalendar document to `user`'s family calendar, as if
+  `user` had sent it. `import_email/1` calls this once the sender is verified.
+  """
+  @spec import_calendar(binary(), User.t()) :: [outcome()]
+  def import_calendar(data, %User{} = user) do
     case ICS.parse(data, default_time_zone: config(:default_time_zone)) do
       {:ok, method, vevents} -> Enum.map(vevents, &apply_vevent(&1, method, user))
       {:error, reason} -> [{:skipped, reason}]

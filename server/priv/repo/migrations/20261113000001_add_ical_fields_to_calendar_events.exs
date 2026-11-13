@@ -5,10 +5,10 @@ defmodule Portermills.Repo.Migrations.AddIcalFieldsToCalendarEvents do
   # that updated invites replace the event and cancellations remove it.
   def change do
     alter table(:calendar_events) do
-      add(:ical_uid, :text)
-      add(:ical_sequence, :integer, null: false, default: 0)
+      add :ical_uid, :text
+      add :ical_sequence, :integer, null: false, default: 0
     end
 
-    create(unique_index(:calendar_events, [:family_id, :ical_uid], where: "ical_uid IS NOT NULL"))
+    create unique_index(:calendar_events, [:family_id, :ical_uid], where: "ical_uid IS NOT NULL")
   end
 end

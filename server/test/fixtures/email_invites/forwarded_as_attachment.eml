@@ -1,0 +1,57 @@
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=family.example;
+ i=@family.example; q=dns/txt; s=sel1; t=1794580676; h=from : to :
+ subject : date : message-id : mime-version : content-type;
+ bh=PUXaCGhKgtosojNDbPBWEW3vyK78A7zA9gKCCwU2HSs=;
+ b=4zdXHtHQlUollMKSipDD/mxwkwmrZnlytLX2beoIqbYf2zL+GC2MQQfe+1Te/iEFPAQZ+
+ AdIuJOVq93hM3COJgBux4Jd4hLvKZrXNJMjGdFTxcgH08IQAURO1RVduEbklx4XL+QcR8K6
+ jdicqSoEJKoRAonq8NgeT7vp50kqw6v7q+Yrk9RcBTvj39oC32Fe4APOm28FbGO8rFPyAbG
+ GRoGex1OW3yc/tDvu0skpcw6Klb4TUtjkMfhdeg7aYlPn2kpFghVY3ZQfr0OXpsk6X/cbG4
+ nDjv5tFUUKk4EzTUlxXbeO4JVSuS26iYmv+P30myPcVp5uisCIxcgjO3lFYQ==
+From: mum@family.example
+To: app@portermills.net
+Subject: Fwd: Christmas
+Date: Fri, 13 Nov 2026 12:10:00 +0000
+Message-ID: <forwarded@family.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="Apple-Mail=_outer"
+
+--Apple-Mail=_outer
+Content-Type: text/plain; charset=us-ascii
+
+See attached.
+
+--Apple-Mail=_outer
+Content-Type: message/rfc822; name="Christmas.eml"
+Content-Disposition: attachment; filename="Christmas.eml"
+
+From: Gran <gran@elsewhere.example>
+To: mum@family.example
+Subject: Christmas
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="inner-boundary"
+
+--inner-boundary
+Content-Type: text/plain
+
+Come for Christmas!
+
+--inner-boundary
+Content-Type: text/calendar; method=REQUEST; name="invite.ics"
+Content-Transfer-Encoding: 7bit
+
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Apple Inc.//macOS 15.0//EN
+METHOD:REQUEST
+BEGIN:VEVENT
+UID:B1C2D3E4-F5A6-4B7C-8D9E-0F1A2B3C4D5E
+DTSTART;VALUE=DATE:20261224
+DTEND;VALUE=DATE:20261227
+SUMMARY:Christmas at Gran's
+SEQUENCE:0
+END:VEVENT
+END:VCALENDAR
+
+--inner-boundary--
+
+--Apple-Mail=_outer--

@@ -35,14 +35,6 @@ defmodule Portermills.DataCase do
     %User{} |> User.changeset(attrs) |> Repo.insert!()
   end
 
-  @doc "An Authentication-Results header as Fastmail writes it, passing DKIM and DMARC."
-  def passing_auth_results(domain) do
-    "mx4.messagingengine.com; dkim=pass (2048-bit rsa key sha256) header.d=#{domain} " <>
-      "header.i=@#{domain} header.b=AbCdEf header.a=rsa-sha256 header.s=s1 x-bits=2048; " <>
-      "dmarc=pass policy.published-domain-policy=none (p=none,d=none,d.eval=none) " <>
-      "policy.policy-from=p header.from=#{domain}; spf=pass smtp.mailfrom=bounce@#{domain}"
-  end
-
   @doc "Builds a minimal invite. `props` are raw VEVENT lines added after the defaults."
   def invite_ics(opts \\ []) do
     method = Keyword.get(opts, :method, "REQUEST")
