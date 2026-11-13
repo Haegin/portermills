@@ -38,6 +38,9 @@ if config_env() == :prod do
       verify: :verify_peer,
       cacerts: :public_key.cacerts_get(),
       server_name_indication: String.to_charlist(System.get_env("SMTP_HOST") || "smtp.fastmail.com"),
+      # Fastmail's certificate names *.fastmail.com; OTP only matches wildcards
+      # when given the HTTPS-style match function.
+      customize_hostname_check: [match_fun: :public_key.pkix_verify_hostname_match_fun(:https)],
       depth: 3
     ]
 end
