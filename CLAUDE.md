@@ -130,6 +130,7 @@ server/lib/
 ├── portermills/            # Business logic (contexts)
 │   ├── accounts/           # Users, families, magic tokens
 │   ├── calendar/           # Calendar events
+│   ├── email_invites/      # Emailed calendar invites → family calendar (Postmark inbound)
 │   ├── lists/              # Shopping + packing lists
 │   └── wishlists/          # Wishlists (separate context)
 └── portermills_web/        # HTTP + WebSocket layer
@@ -143,6 +144,27 @@ server/lib/
 ### Calendar
 Shared family calendar. Events broadcast in real-time via Phoenix Channel
 (`family:<id>:calendar`). All family members see changes immediately.
+
+### Email invites
+Family members forward (or have organisers send) calendar invites to **app@portermills.net**;
+the invites become events on the sender's family calendar. Server-only — the apps just see
+new events (broadcast as `calendar:event_created|updated|deleted`).
+
+- **Routing**: app@portermills.net is a Fastmail alias that forwards to a Postmark inbound
+  address. Postmark POSTs each email to `POST /api/inbound/postmark`
+  (`PostmarkInboundController`, HTTP basic auth). The payload must include `RawEmail`
+  ("Include raw email content in JSON payload" in Postmark). Sending stays on Fastmail.
+- **Sender check**: the single `From:` address must belong to a family member, and the
+  message must carry a valid DKIM signature from that address's domain (or a parent
+  domain), verified by `EmailInvites.DKIM` against the key in DNS — `From:` alone is never
+  trusted. `rsa-sha1` and `l=` (partial body) signatures are refused.
+- **Parsing**: `EmailInvites.MIME` pulls calendar parts out of the raw MIME (inline,
+  attached, or inside a forwarded message); `EmailInvites.ICS` parses them.
+- Invites are matched by iCalendar UID (`calendar_events.ical_uid`, unique per family):
+  updates with a newer `SEQUENCE` replace the event, `METHOD:CANCEL` deletes it.
+  Single-occurrence overrides (`RECURRENCE-ID`) and replies are skipped.
+- Test emails in `server/test/fixtures/email_invites/` are DKIM-signed by
+  `generate.py` (dkimpy); regenerate them with it if you need new cases.
 
 ### Lists
 Shopping list and packing lists (multiple named packing lists for different occasions).
@@ -168,7 +190,7 @@ No code is shared with the `lists` context.
 - `magic_tokens` — (id, user_id, token, expires_at, used_at)
 
 ### Calendar
-- `calendar_events` — (id, family_id, created_by_id, title, description, starts_at, ends_at, all_day, recurrence_rule)
+- `calendar_events` — (id, family_id, created_by_id, title, description, starts_at, ends_at, all_day, recurrence_rule, ical_uid, ical_sequence)
 
 ### Lists
 - `lists` — (id, family_id, type: shopping|packing, name, archived)
@@ -202,7 +224,12 @@ The app points to `http://10.0.2.2:4000` (localhost from the Android emulator).
 
 ### Environment
 Copy `server/.env.example` → `server/.env` and fill in `DATABASE_URL`, `SECRET_KEY_BASE`,
-`GUARDIAN_SECRET`.
+`GUARDIAN_SECRET`. For email invites also set `POSTMARK_INBOUND_USERNAME` and
+`POSTMARK_INBOUND_PASSWORD` (the webhook's basic-auth credentials); optional:
+`DEFAULT_TIME_ZONE`.
+
+### Tests
+`cd server && mix test` (needs Postgres; dependencies need Erlang/OTP 26+).
 
 ## Conventions
 

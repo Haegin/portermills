@@ -1,0 +1,18 @@
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=family.example;
+ i=@family.example; q=dns/txt; s=sel1; t=1794580676; h=from : to :
+ subject : date : message-id : mime-version : content-type;
+ bh=30DjwaKxlDoT1oaT0+/RsszzH/0bbPBmxKc0tZcuihg=;
+ b=CzFpC6ktSNHWIrrAbCJDvgMKKjf5bvWg5C65otItTu0WAI5DCgVO1XM3/+LnpLuAvcQDs
+ QPrDymfig4Z0UhrALIXBkRU2rk0eJZz8Z22AaFVW3rhRy21AE4SRHpewkbaAHq4pSRSnBay
+ KhtbJLozqWafcnVjT2WYvxRN8Aidw9HJIdEBL/X92lI2cqtFbsUj/+SQR9RXSg995dJsvS+
+ RlET4Ndk4AlAoK73HCfdl/mnkWFnNCUeDCPW2KQ+bOysQbCM2tPsXDKzSd2+Q3yqUF5Us6m
+ iYnZt8+06PWRaID/AdCc/6W2eIHw4Mt9vUgfLn3l81XqHr9TU5gbvBmgOJvA==
+From: Mum <mum@family.example>
+To: app@portermills.net
+Subject: Did the invite arrive?
+Date: Fri, 13 Nov 2026 12:15:00 +0000
+Message-ID: <no-invite@family.example>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+
+Just checking!

@@ -25,6 +25,13 @@ defmodule PortermillsWeb.Router do
     post "/auth/verify", AuthController, :verify_magic_link
   end
 
+  # Inbound email webhooks (authenticated with basic auth by the controller)
+  scope "/api/inbound", PortermillsWeb do
+    pipe_through :api_public
+
+    post "/postmark", PostmarkInboundController, :create
+  end
+
   # Authenticated API endpoints
   scope "/api", PortermillsWeb do
     pipe_through :api

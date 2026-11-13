@@ -1,0 +1,65 @@
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=attacker.example;
+ i=@attacker.example; q=dns/txt; s=evil; t=1794580676; h=from : to :
+ subject : date : message-id : mime-version : content-type;
+ bh=LF+UM3h4eiHfwEui6TMbSvoPnuRtKQSOBe+7giOGABQ=;
+ b=J2F77L4xia+72XbGlflXaZyvEzTzqw7dYd1q6q9POO9pN2THGMsaZ4JoChGCABr3A7ENM
+ ynsWsh4yfwzZ5TcHk2UUpaoYgM8u5lkLnnSs0CPpX623mar5lO8NID3c6mtquLa6w1oL4mx
+ 2YnwCplrpaIPyvSgUS9IDENQ52fNkj8i/5BaAy7oZTTdlbldbaN+x1W69vjekjVwE6OgAUB
+ 9a/ZKO2Eoz58272IqI+xdPZcpfWF+W3JypqIUKYA5kcm86H/9PabkrGTjLavIwXEnLvmhtw
+ 8E6YDUn5bYnXQ+1Jsxy/i4rBJ6nTCLd4d+YQ4lub+SgKR5luniwQKsk/C4iw==
+From: Mum <mum@family.example>
+To: app@portermills.net
+Subject: Fwd: Invitation: Swimming gala @ Sat 5 Dec 2026
+ 2pm - 4pm (GMT)
+Date: Fri, 13 Nov 2026 12:00:00 +0000
+Message-ID: <gmail-style@family.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="000000000000outer"
+
+--000000000000outer
+Content-Type: multipart/alternative; boundary="000000000000inner"
+
+--000000000000inner
+Content-Type: text/plain; charset="UTF-8"
+
+---------- Forwarded message ---------
+Swimming gala   with  extra   spaces
+Saturday 5 Dec 2026 2pm - 4pm (GMT)
+
+--000000000000inner
+Content-Type: text/html; charset="UTF-8"
+
+<div>Swimming gala</div>
+
+--000000000000inner
+Content-Type: text/calendar; charset="UTF-8"; method=REQUEST
+Content-Transfer-Encoding: base64
+
+QkVHSU46VkNBTEVOREFSClBST0RJRDotLy9Hb29nbGUgSW5jLy9Hb29nbGUgQ2FsZW5kYXIgNzAu
+OTA1NC8vRU4KVkVSU0lPTjoyLjAKQ0FMU0NBTEU6R1JFR09SSUFOCk1FVEhPRDpSRVFVRVNUCkJF
+R0lOOlZFVkVOVApEVFNUQVJUO1RaSUQ9RXVyb3BlL0xvbmRvbjoyMDI2MTIwNVQxNDAwMDAKRFRF
+TkQ7VFpJRD1FdXJvcGUvTG9uZG9uOjIwMjYxMjA1VDE2MDAwMApEVFNUQU1QOjIwMjYxMTEzVDEy
+MDAwMFoKT1JHQU5JWkVSO0NOPVN3aW0gQ2x1YjptYWlsdG86Y2x1YkBzd2ltLmV4YW1wbGUKVUlE
+OjVxM24wdjlsZDBrcThtMmtqMWI2ZmhkN2M0QGdvb2dsZS5jb20KU0VRVUVOQ0U6MApTVEFUVVM6
+Q09ORklSTUVEClNVTU1BUlk6U3dpbW1pbmcgZ2FsYQpMT0NBVElPTjpMZWlzdXJlIGNlbnRyZVws
+IFBvb2wgMgpERVNDUklQVElPTjpCcmluZyBnb2dnbGVzIGFuZCBhIHRvd2VsLgpFTkQ6VkVWRU5U
+CkVORDpWQ0FMRU5EQVIK
+--000000000000inner--
+
+--000000000000outer
+Content-Type: application/ics; name="invite.ics"
+Content-Disposition: attachment; filename="invite.ics"
+Content-Transfer-Encoding: base64
+
+QkVHSU46VkNBTEVOREFSClBST0RJRDotLy9Hb29nbGUgSW5jLy9Hb29nbGUgQ2FsZW5kYXIgNzAu
+OTA1NC8vRU4KVkVSU0lPTjoyLjAKQ0FMU0NBTEU6R1JFR09SSUFOCk1FVEhPRDpSRVFVRVNUCkJF
+R0lOOlZFVkVOVApEVFNUQVJUO1RaSUQ9RXVyb3BlL0xvbmRvbjoyMDI2MTIwNVQxNDAwMDAKRFRF
+TkQ7VFpJRD1FdXJvcGUvTG9uZG9uOjIwMjYxMjA1VDE2MDAwMApEVFNUQU1QOjIwMjYxMTEzVDEy
+MDAwMFoKT1JHQU5JWkVSO0NOPVN3aW0gQ2x1YjptYWlsdG86Y2x1YkBzd2ltLmV4YW1wbGUKVUlE
+OjVxM24wdjlsZDBrcThtMmtqMWI2ZmhkN2M0QGdvb2dsZS5jb20KU0VRVUVOQ0U6MApTVEFUVVM6
+Q09ORklSTUVEClNVTU1BUlk6U3dpbW1pbmcgZ2FsYQpMT0NBVElPTjpMZWlzdXJlIGNlbnRyZVws
+IFBvb2wgMgpERVNDUklQVElPTjpCcmluZyBnb2dnbGVzIGFuZCBhIHRvd2VsLgpFTkQ6VkVWRU5U
+CkVORDpWQ0FMRU5EQVIK
+--000000000000outer--
+
+

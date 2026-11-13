@@ -6,6 +6,13 @@ defmodule Portermills.Accounts do
   def get_user(id), do: Repo.get(User, id)
   def get_user_by_email(email), do: Repo.get_by(User, email: email)
 
+  @doc "Looks a user up by email address, ignoring case and surrounding whitespace."
+  def find_user_by_email(email) when is_binary(email) do
+    normalized = email |> String.trim() |> String.downcase()
+
+    Repo.one(from u in User, where: fragment("lower(?)", u.email) == ^normalized, limit: 1)
+  end
+
   def create_magic_link(email) do
     with %User{} = user <- get_user_by_email(email) do
       token = :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)

@@ -16,6 +16,9 @@ config :portermills, PortermillsWeb.Endpoint,
 
 config :portermills, Portermills.Mailer, adapter: Swoosh.Adapters.Local
 
+# The local mail adapter needs no HTTP client (Swoosh otherwise insists on hackney).
+config :swoosh, :api_client, false
+
 config :portermills, Portermills.Guardian,
   issuer: "portermills",
   secret_key: System.get_env("GUARDIAN_SECRET") || "dev_secret_change_in_prod"
@@ -25,5 +28,14 @@ config :logger, :console,
   metadata: [:request_id]
 
 config :phoenix, :json_library, Jason
+
+# Needed to convert invite times given in a named zone (TZID=Europe/London) to UTC.
+config :elixir, :time_zone_database, Tz.TimeZoneDatabase
+
+# Email invites (see Portermills.EmailInvites). The Postmark webhook credentials are
+# read from environment variables in config/runtime.exs.
+config :portermills, Portermills.EmailInvites,
+  # Used for "floating" invite times that carry no timezone at all.
+  default_time_zone: "Etc/UTC"
 
 import_config "#{config_env()}.exs"
